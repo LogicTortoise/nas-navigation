@@ -6,30 +6,52 @@
     target="_blank"
     class="glass-card group relative flex flex-col items-center justify-center p-6 rounded-2xl h-32 md:h-40 cursor-pointer"
   >
-    <!-- 操作按钮 -->
-    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+    <!-- 三点菜单按钮 -->
+    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" ref="menuRef">
       <button
-        v-if="link.restart_script"
-        @click.prevent="$emit('restart', link)"
-        class="text-slate-400 hover:text-green-600 p-1.5 rounded-lg hover:bg-green-50 transition-colors"
-        title="重启服务"
+        @click.prevent="toggleMenu"
+        class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-white/80 transition-colors"
       >
-        <i class="fa-solid fa-rotate text-xs"></i>
+        <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
       </button>
-      <button
-        @click.prevent="$emit('edit', link)"
-        class="text-slate-400 hover:text-indigo-600 p-1.5 rounded-lg hover:bg-indigo-50 transition-colors"
-        title="编辑"
+
+      <!-- 下拉菜单 -->
+      <Transition
+        enter-active-class="transition duration-150 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-100 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
       >
-        <i class="fa-solid fa-edit text-xs"></i>
-      </button>
-      <button
-        @click.prevent="$emit('delete', link)"
-        class="text-slate-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
-        title="删除"
-      >
-        <i class="fa-solid fa-trash text-xs"></i>
-      </button>
+        <div
+          v-if="showMenu"
+          class="absolute right-0 top-full mt-1 w-32 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50"
+        >
+          <button
+            @click.prevent="handleEdit"
+            class="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors flex items-center gap-2"
+          >
+            <i class="fa-solid fa-edit text-xs"></i>
+            编辑
+          </button>
+          <button
+            v-if="link.restart_script"
+            @click.prevent="handleRestart"
+            class="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-green-50 hover:text-green-600 transition-colors flex items-center gap-2"
+          >
+            <i class="fa-solid fa-rotate text-xs"></i>
+            重启
+          </button>
+          <button
+            @click.prevent="handleDelete"
+            class="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+          >
+            <i class="fa-solid fa-trash text-xs"></i>
+            删除
+          </button>
+        </div>
+      </Transition>
     </div>
 
     <!-- 图标 -->
@@ -77,36 +99,58 @@
       <p class="text-xs text-slate-500 truncate">{{ link.description || link.url }}</p>
     </div>
 
-    <!-- 操作按钮 -->
-    <div class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+    <!-- 三点菜单按钮 -->
+    <div class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity relative" ref="menuRefHorizontal">
       <button
-        v-if="link.restart_script"
-        @click.prevent="$emit('restart', link)"
-        class="text-slate-400 hover:text-green-600 p-1"
-        title="重启服务"
+        @click.prevent="toggleMenu"
+        class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-white/80 transition-colors"
       >
-        <i class="fa-solid fa-rotate text-xs"></i>
+        <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
       </button>
-      <button
-        @click.prevent="$emit('edit', link)"
-        class="text-slate-400 hover:text-indigo-600 p-1"
-        title="编辑"
+
+      <!-- 下拉菜单 -->
+      <Transition
+        enter-active-class="transition duration-150 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-100 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
       >
-        <i class="fa-solid fa-edit text-xs"></i>
-      </button>
-      <button
-        @click.prevent="$emit('delete', link)"
-        class="text-slate-400 hover:text-red-500 p-1"
-        title="删除"
-      >
-        <i class="fa-solid fa-trash text-xs"></i>
-      </button>
+        <div
+          v-if="showMenu"
+          class="absolute right-0 top-full mt-1 w-32 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden z-50"
+        >
+          <button
+            @click.prevent="handleEdit"
+            class="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors flex items-center gap-2"
+          >
+            <i class="fa-solid fa-edit text-xs"></i>
+            编辑
+          </button>
+          <button
+            v-if="link.restart_script"
+            @click.prevent="handleRestart"
+            class="w-full px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-green-50 hover:text-green-600 transition-colors flex items-center gap-2"
+          >
+            <i class="fa-solid fa-rotate text-xs"></i>
+            重启
+          </button>
+          <button
+            @click.prevent="handleDelete"
+            class="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+          >
+            <i class="fa-solid fa-trash text-xs"></i>
+            删除
+          </button>
+        </div>
+      </Transition>
     </div>
   </a>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
   link: {
@@ -119,9 +163,39 @@ const props = defineProps({
   }
 })
 
-defineEmits(['edit', 'delete', 'restart'])
+const emit = defineEmits(['edit', 'delete', 'restart'])
 
 const iconError = ref(false)
+const showMenu = ref(false)
+const menuRef = ref(null)
+const menuRefHorizontal = ref(null)
+
+function toggleMenu() {
+  showMenu.value = !showMenu.value
+}
+
+function handleEdit() {
+  showMenu.value = false
+  emit('edit', props.link)
+}
+
+function handleDelete() {
+  showMenu.value = false
+  emit('delete', props.link)
+}
+
+function handleRestart() {
+  showMenu.value = false
+  emit('restart', props.link)
+}
+
+function handleClickOutside(event) {
+  const target = event.target
+  if (menuRef.value && !menuRef.value.contains(target) &&
+      menuRefHorizontal.value && !menuRefHorizontal.value.contains(target)) {
+    showMenu.value = false
+  }
+}
 
 function handleIconError() {
   iconError.value = true
@@ -158,4 +232,12 @@ function getIconColor() {
   const index = props.link.name.charCodeAt(0) % colors.length
   return colors[index]
 }
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
