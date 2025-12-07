@@ -101,24 +101,12 @@
           <label class="block text-sm font-medium text-slate-700">
             所属分类 <span class="text-rose-500">*</span>
           </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <i class="fa-solid fa-folder text-slate-400"></i>
-            </div>
-            <select
-              v-model="form.category_id"
-              class="w-full pl-12 pr-10 py-3 bg-white/80 border border-slate-300 rounded-xl form-input-focus transition-all text-slate-800 appearance-none"
-              required
-            >
-              <option value="">请选择分类</option>
-              <option v-for="cat in store.categories" :key="cat.id" :value="cat.id">
-                {{ cat.name }}
-              </option>
-            </select>
-            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-              <i class="fa-solid fa-chevron-down text-slate-400"></i>
-            </div>
-          </div>
+          <CustomSelect
+            v-model="form.category_id"
+            :options="categoryOptions"
+            placeholder="请选择分类"
+            icon="fa-solid fa-folder"
+          />
         </div>
 
         <!-- 描述（可选） -->
@@ -144,23 +132,14 @@
           <label class="block text-sm font-medium text-slate-700">
             关联脚本 <span class="text-slate-400 text-xs">(可选)</span>
           </label>
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <i class="fa-solid fa-code text-slate-400"></i>
-            </div>
-            <select
-              v-model="form.script_id"
-              class="w-full pl-12 pr-10 py-3 bg-white/80 border border-slate-300 rounded-xl form-input-focus transition-all text-slate-800 appearance-none"
-            >
-              <option :value="null">无</option>
-              <option v-for="script in store.scripts" :key="script.id" :value="script.id">
-                {{ script.name }}
-              </option>
-            </select>
-            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-              <i class="fa-solid fa-chevron-down text-slate-400"></i>
-            </div>
-          </div>
+          <CustomSelect
+            v-model="form.script_id"
+            :options="scriptOptions"
+            placeholder="选择脚本"
+            icon="fa-solid fa-code"
+            :allow-empty="true"
+            empty-label="无"
+          />
         </div>
 
         <!-- 表单底部操作按钮 -->
@@ -185,8 +164,9 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useAppStore } from '../stores/app'
+import CustomSelect from './CustomSelect.vue'
 
 const props = defineProps({
   link: Object,
@@ -195,6 +175,51 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save'])
 const store = useAppStore()
+
+// 分类选项
+const categoryOptions = computed(() => {
+  return store.categories.map(cat => ({
+    value: cat.id,
+    label: cat.name,
+    icon: getCategoryIcon(cat.icon),
+    color: getCategoryColor(cat.icon)
+  }))
+})
+
+// 脚本选项
+const scriptOptions = computed(() => {
+  return store.scripts.map(script => ({
+    value: script.id,
+    label: script.name,
+    icon: 'fa-solid fa-terminal',
+    color: '#10b981'
+  }))
+})
+
+function getCategoryIcon(icon) {
+  if (icon && icon.startsWith('fa-')) {
+    return 'fa-solid ' + icon
+  }
+  const icons = {
+    'star': 'fa-solid fa-star',
+    'briefcase': 'fa-solid fa-briefcase',
+    'palette': 'fa-solid fa-pen-nib',
+    'folder': 'fa-solid fa-folder'
+  }
+  return icons[icon] || 'fa-solid fa-folder'
+}
+
+function getCategoryColor(icon) {
+  const iconName = icon && icon.startsWith('fa-') ? icon.replace('fa-', '') : icon
+  const colors = {
+    'star': '#eab308',
+    'briefcase': '#3b82f6',
+    'palette': '#ec4899',
+    'pen-nib': '#ec4899',
+    'folder': '#f59e0b'
+  }
+  return colors[iconName] || '#64748b'
+}
 
 const form = reactive({
   name: '',
