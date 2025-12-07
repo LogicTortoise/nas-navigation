@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>酷站导航 - 您的专属数字空间</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // Indigo 600
+                        primaryHover: '#4338ca',
+                        secondary: '#10B981', // Emerald 500
+                        accent: '#F43F5E', // Rose 500
+                        dark: '#1e293b',
+                        light: '#f8fafc',
+                        glassBorder: 'rgba(255, 255, 255, 0.2)',
+                        glassSurface: 'rgba(255, 255, 255, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+                        'glow': '0 0 15px rgba(79, 70, 229, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 自定义样式 - 玻璃拟态与现代感增强 */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* 动态背景图 */
+            background-image: url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.1);
+            border-color: theme('colors.primary');
+        }
+
+        .nav-item-active {
+            background: theme('colors.primary');
+            color: white;
+            box-shadow: theme('colors.glow');
+        }
+
+        .nav-item-inactive:hover {
+            background: rgba(255, 255, 255, 0.5);
+            color: theme('colors.primary');
+        }
+
+        /* 隐藏滚动条但保持功能 */
+        .hide-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .hide-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.1);
+            border-radius: 20px;
+        }
+
+        /* 搜索框聚焦动画 */
+        .search-focus:focus-within {
+            box-shadow: 0 0 0 2px theme('colors.primary'), 0 4px 12px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        /* 拖拽排序样式 */
+        .dragging {
+            opacity: 0.5;
+            transform: scale(1.05);
+        }
+
+        .drag-over {
+            border: 2px dashed theme('colors.primary');
+        }
+
+        /* 模态弹窗动画 */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        /* 面包屑导航样式 */
+        .breadcrumb-item:not(:last-child)::after {
+            content: "/";
+            margin: 0 8px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex items-center justify-center p-0 md:p-4 lg:p-6 text-slate-800">
+
+    <!-- 背景遮罩，用于提升文字可读性 -->
+    <div id="bg-overlay" class="fixed inset-0 bg-gradient-to-br from-indigo-100/30 to-purple-100/30 pointer-events-none z-0"></div>
+
+    <!-- 主应用容器 -->
+    <div id="app-container" class="relative z-10 w-full h-full max-w-[1920px] flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden rounded-none md:rounded-3xl shadow-2xl glass-panel">
+        
+        <!-- 左侧侧边栏 (分类导航) -->
+        <aside id="sidebar" class="hidden md:flex flex-col w-20 lg:w-64 h-full border-r border-glassBorder bg-white/30 transition-all duration-300">
+            <!-- Logo 区域 -->
+            <div id="sidebar-header" class="h-[80px] flex items-center justify-center lg:justify-start px-0 lg:px-8 border-b border-glassBorder">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white shadow-lg">
+                    <i class="fa-solid fa-compass text-xl"></i>
+                </div>
+                <span id="app-name" class="ml-3 text-xl font-bold tracking-tight text-slate-800 hidden lg:block">酷站导航</span>
+            </div>
+
+            <!-- 分类列表 -->
+            <nav id="category-nav" class="flex-1 overflow-y-auto py-6 px-3 space-y-2 hide-scrollbar">
+                <!-- 选中状态 -->
+                <button id="cat-all" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl nav-item-active transition-all group" data-category="all">
+                    <i class="fa-solid fa-layer-group text-lg w-6 text-center"></i>
+                    <span class="ml-3 font-medium hidden lg:block">全部推荐</span>
+                </button>
+
+                <!-- 未选中状态 -->
+                <button id="cat-work" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl nav-item-inactive text-slate-600 transition-all group" data-category="work">
+                    <i class="fa-solid fa-briefcase text-lg w-6 text-center group-hover:scale-110 transition-transform"></i>
+                    <span class="ml-3 font-medium hidden lg:block">工作效率</span>
+                </button>
+
+                <button id="cat-study" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl nav-item-inactive text-slate-600 transition-all group" data-category="study">
+                    <i class="fa-solid fa-graduation-cap text-lg w-6 text-center group-hover:scale-110 transition-transform"></i>
+                    <span class="ml-3 font-medium hidden lg:block">学习充电</span>
+                </button>
+
+                <button id="cat-design" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl nav-item-inactive text-slate-600 transition-all group" data-category="design">
+                    <i class="fa-solid fa-pen-nib text-lg w-6 text-center group-hover:scale-110 transition-transform"></i>
+                    <span class="ml-3 font-medium hidden lg:block">设计灵感</span>
+                </button>
+
+                <button id="cat-entertainment" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl nav-item-inactive text-slate-600 transition-all group" data-category="entertainment">
+                    <i class="fa-solid fa-gamepad text-lg w-6 text-center group-hover:scale-110 transition-transform"></i>
+                    <span class="ml-3 font-medium hidden lg:block">娱乐摸鱼</span>
+                </button>
+                
+                <div class="my-4 border-t border-glassBorder w-full"></div>
+
+                <button id="btn-add-category" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl text-slate-500 hover:bg-slate-200/50 transition-all">
+                    <i class="fa-solid fa-plus text-lg w-6 text-center"></i>
+                    <span class="ml-3 font-medium text-sm hidden lg:block">添加分类</span>
+                </button>
+
+                <button id="btn-manage-category" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl text-slate-500 hover:bg-slate-200/50 transition-all">
+                    <i class="fa-solid fa-gear text-lg w-6 text-center"></i>
+                    <span class="ml-3 font-medium text-sm hidden lg:block">管理分类</span>
+                </button>
+            </nav>
+
+            <!-- 底部用户信息/设置 -->
+            <div id="sidebar-footer" class="p-4 border-t border-glassBorder">
+                <button id="user-profile" class="flex items-center justify-center lg:justify-start p-2 rounded-xl hover:bg-white/40 transition-colors cursor-pointer w-full">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+                         alt="用户头像" 
+                         data-category="人物"
+                         class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover">
+                    <div class="ml-3 hidden lg:block overflow-hidden">
+                        <p class="text-sm font-bold text-slate-800 truncate">Alex Designer</p>
+                        <p class="text-xs text-slate-500 truncate">点击进入设置</p>
+                    </div>
+                </button>
+            </div>
+        </aside>
+
+        <!-- 右侧主内容区 -->
+        <main id="main-content" class="flex-1 flex flex-col h-full overflow-hidden relative">
+            
+            <!-- 顶部导航栏 -->
+            <header id="top-nav" class="h-[80px] flex items-center justify-between px-6 md:px-10 py-4 shrink-0 z-20">
+                <!-- 移动端汉堡菜单 -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-600 hover:text-primary">
+                    <i class="fa-solid fa-bars text-2xl"></i>
+                </button>
+
+                <!-- 移动端 Logo -->
+                <span class="md:hidden text-lg font-bold text-slate-800">酷站导航</span>
+
+                <!-- 搜索框 (桌面端) -->
+                <div id="search-container" class="hidden md:flex flex-1 max-w-2xl mx-auto relative group search-focus rounded-full transition-all duration-300 bg-white/60 backdrop-blur-md border border-white/50">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-search text-slate-400 group-focus-within:text-primary transition-colors"></i>
+                    </div>
+                    <input type="text" 
+                           id="global-search" 
+                           class="block w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-full text-slate-800 placeholder-slate-400 focus:ring-0 sm:text-sm" 
+                           placeholder="搜索书签、Google 或输入网址...">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <span class="text-xs text-slate-400 border border-slate-300 rounded px-1.5 py-0.5">⌘K</span>
+                    </div>
+                </div>
+
+                <!-- 右侧操作区 -->
+                <div id="header-actions" class="flex items-center space-x-4 ml-4">
+                    <!-- 时间显示 -->
+                    <div id="current-time" class="hidden xl:flex flex-col items-end mr-4 text-right">
+                        <span class="text-lg font-bold text-slate-700 leading-none">09:41</span>
+                        <span class="text-xs text-slate-500">10月24日 周二</span>
+                    </div>
+
+                    <!-- 添加按钮 -->
+                    <button id="btn-add-link" class="flex items-center justify-center px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-plus mr-2"></i>
+                        <span class="text-sm font-medium">添加</span>
+                    </button>
+                    
+                    <!-- 移动端设置入口 -->
+                    <button id="mobile-settings-btn" class="md:hidden p-2 text-slate-600">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+                             alt="用户头像" 
+                             data-category="人物"
+                             class="w-8 h-8 rounded-full border border-white shadow-sm">
+                    </button>
+                </div>
+            </header>
+
+            <!-- 内容滚动区 -->
+            <div id="content-scroll-area" class="flex-1 overflow-y-auto p-6 md:p-10 hide-scrollbar">
+                
+                <!-- 面包屑导航 -->
+                <nav id="breadcrumb" class="mb-6">
+                    <ol class="flex items-center space-x-2 text-sm text-slate-500">
+                        <li class="breadcrumb-item">
+                            <span class="text-slate-700 font-medium">酷站导航</span>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <span id="current-category-name" class="text-slate-700 font-medium">全部推荐</span>
+                        </li>
+                    </ol>
+                </nav>
+
+                <!-- 欢迎语/状态 -->
+                <div id="welcome-section" class="mb-8 animate-fade-in-up">
+                    <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2">早安，Alex ☀️</h1>
+                    <p class="text-slate-500">准备好开始高效的一天了吗？</p>
+                </div>
+
+                <!-- 常用/置顶区域 -->
+                <section id="section-favorites" class="mb-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-slate-700 flex items-center">
+                            <i class="fa-solid fa-star text-yellow-400 mr-2"></i> 常用访问
+                        </h2>
+                        <button id="btn-edit-favorites" class="text-xs text-slate-400 hover:text-primary transition-colors">编辑</button>
+                    </div>
+                    
+                    <div id="favorites-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+                        <!-- 常用网站卡片将通过JavaScript动态生成 -->
+                    </div>
+                </section>
+
+                <!-- 当前分类内容区域 -->
+                <section id="section-current-category" class="mb-10">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 id="current-section-title" class="text-lg font-semibold text-slate-700">全部推荐</h2>
+                        <div class="flex items-center space-x-2">
+                            <button id="btn-sort-links" class="text-xs text-slate-400 hover:text-primary transition-colors">
+                                <i class="fa-solid fa-sort mr-1"></i>排序
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="links-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                        <!-- 网站链接卡片将通过JavaScript动态生成 -->
+                    </div>
+
+                    <!-- 无数据提示 -->
+                    <div id="empty-state" class="hidden text-center py-16">
+                        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                            <i class="fa-solid fa-link text-2xl text-slate-400"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-slate-700 mb-2">暂无网站链接</h3>
+                        <p class="text-slate-500 mb-6">开始添加您的第一个网站链接吧</p>
+                        <button id="btn-add-first-link" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primaryHover transition-colors">
+                            <i class="fa-solid fa-plus mr-2"></i>添加链接
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 底部留白 -->
+                <div class="h-10"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 添加链接弹窗 -->
+    <div id="add-link-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 m-4 modal-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800">添加新导航</h3>
+                <button id="close-add-link-modal" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="add-link-form" class="space-y-4">
+                <div>
+                    <label for="link-url" class="block text-sm font-medium text-slate-700 mb-1">网址 URL *</label>
+                    <input type="url" id="link-url" name="url" placeholder="https://example.com" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" required>
+                </div>
+                <div>
+                    <label for="link-name" class="block text-sm font-medium text-slate-700 mb-1">名称 *</label>
+                    <input type="text" id="link-name" name="name" placeholder="网站名称" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" required>
+                </div>
+                <div>
+                    <label for="link-category" class="block text-sm font-medium text-slate-700 mb-1">分类</label>
+                    <select id="link-category" name="category" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white">
+                        <option value="all">全部推荐</option>
+                        <option value="work">工作效率</option>
+                        <option value="study">学习充电</option>
+                        <option value="design">设计灵感</option>
+                        <option value="entertainment">娱乐摸鱼</option>
+                    </select>
+                </div>
+                
+                <div class="pt-4 flex space-x-3">
+                    <button type="button" id="cancel-add-link" class="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors">取消</button>
+                    <button type="submit" class="flex-1 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primaryHover font-medium shadow-lg shadow-indigo-500/30 transition-all">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑链接弹窗 -->
+    <div id="edit-link-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 m-4 modal-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800">编辑导航</h3>
+                <button id="close-edit-link-modal" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="edit-link-form" class="space-y-4">
+                <input type="hidden" id="edit-link-id" name="id">
+                <div>
+                    <label for="edit-link-url" class="block text-sm font-medium text-slate-700 mb-1">网址 URL *</label>
+                    <input type="url" id="edit-link-url" name="url" placeholder="https://example.com" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" required>
+                </div>
+                <div>
+                    <label for="edit-link-name" class="block text-sm font-medium text-slate-700 mb-1">名称 *</label>
+                    <input type="text" id="edit-link-name" name="name" placeholder="网站名称" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" required>
+                </div>
+                <div>
+                    <label for="edit-link-category" class="block text-sm font-medium text-slate-700 mb-1">分类</label>
+                    <select id="edit-link-category" name="category" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all bg-white">
+                        <option value="all">全部推荐</option>
+                        <option value="work">工作效率</option>
+                        <option value="study">学习充电</option>
+                        <option value="design">设计灵感</option>
+                        <option value="entertainment">娱乐摸鱼</option>
+                    </select>
+                </div>
+                
+                <div class="pt-4 flex space-x-3">
+                    <button type="button" id="cancel-edit-link" class="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors">取消</button>
+                    <button type="submit" class="flex-1 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primaryHover font-medium shadow-lg shadow-indigo-500/30 transition-all">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加分类弹窗 -->
+    <div id="add-category-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 m-4 modal-enter">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800">添加分类</h3>
+                <button id="close-add-category-modal" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="add-category-form" class="space-y-4">
+                <div>
+                    <label for="category-name" class="block text-sm font-medium text-slate-700 mb-1">分类名称 *</label>
+                    <input type="text" id="category-name" name="name" placeholder="分类名称" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" required>
+                </div>
+                
+                <div class="pt-4 flex space-x-3">
+                    <button type="button" id="cancel-add-category" class="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors">取消</button>
+                    <button type="submit" class="flex-1 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primaryHover font-medium shadow-lg shadow-indigo-500/30 transition-all">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 管理分类弹窗 -->
+    <div id="manage-category-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 m-4 modal-enter max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800">管理分类</h3>
+                <button id="close-manage-category-modal" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="category-list" class="space-y-3">
+                <!-- 分类列表将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 m-4 modal-enter">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                    <i class="fa-solid fa-exclamation-triangle text-2xl text-red-600"></i>
+                </div>
+                <h3 id="confirm-title" class="text-lg font-bold text-slate-800 mb-2">确认删除</h3>
+                <p id="confirm-message" class="text-slate-600">确定要删除这个项目吗？此操作无法撤销。</p>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button id="cancel-confirm" class="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors">取消</button>
+                <button id="confirm-action" class="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 font-medium transition-colors">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据
+        const mockData = {
+            categories: {
+                all: { name: '全部推荐', icon: 'fa-layer-group' },
+                work: { name: '工作效率', icon: 'fa-briefcase' },
+                study: { name: '学习充电', icon: 'fa-graduation-cap' },
+                design: { name: '设计灵感', icon: 'fa-pen-nib' },
+                entertainment: { name: '娱乐摸鱼', icon: 'fa-gamepad' }
+            },
+            links: [
+                { id: 1, name: 'Dribbble', url: 'https://dribbble.com', category: 'design', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: true },
+                { id: 2, name: 'Instagram', url: 'https://instagram.com', category: 'entertainment', icon: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: true },
+                { id: 3, name: 'GitHub', url: 'https://github.com', category: 'work', icon: 'https://github.githubassets.com/favicons/favicon.svg', isFavorite: true },
+                { id: 4, name: 'Behance', url: 'https://behance.net', category: 'design', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: true },
+                { id: 5, name: 'Google Drive', url: 'https://drive.google.com', category: 'work', icon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png', isFavorite: false },
+                { id: 6, name: 'Figma', url: 'https://figma.com', category: 'design', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: false },
+                { id: 7, name: 'Notion', url: 'https://notion.so', category: 'work', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: false },
+                { id: 8, name: 'AWS Console', url: 'https://aws.amazon.com', category: 'work', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: false },
+                { id: 9, name: 'Pinterest', url: 'https://pinterest.com', category: 'design', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: false },
+                { id: 10, name: 'Unsplash', url: 'https://unsplash.com', category: 'design', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: false },
+                { id: 11, name: 'Google Fonts', url: 'https://fonts.google.com', category: 'design', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: false },
+                { id: 12, name: 'YouTube', url: 'https://youtube.com', category: 'entertainment', icon: 'https://www.youtube.com/s/desktop/4a88d8b9/img/favicon.ico', isFavorite: false },
+                { id: 13, name: 'Coursera', url: 'https://coursera.org', category: 'study', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: false },
+                { id: 14, name: 'Medium', url: 'https://medium.com', category: 'study', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: false },
+                { id: 15, name: 'Stack Overflow', url: 'https://stackoverflow.com', category: 'study', icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80', isFavorite: false }
+            ]
+        };
+
+        let currentCategory = 'all';
+        let currentSearch = '';
+        let confirmAction = null;
+
+        // 页面加载完成后的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            setupEventListeners();
+            updateTime();
+            setInterval(updateTime, 60000); // 每分钟更新一次时间
+        });
+
+        function initializePage() {
+            renderFavorites();
+            renderLinks();
+            renderCategories();
+        }
+
+        function setupEventListeners() {
+            // 分类切换
+            document.querySelectorAll('[data-category]').forEach(button => {
+                button.addEventListener('click', function() {
+                    switchCategory(this.dataset.category);
+                });
+            });
+
+            // 搜索功能
+            document.querySelector('#global-search').addEventListener('input', function() {
+                currentSearch = this.value.toLowerCase();
+                renderLinks();
+            });
+
+            // 添加链接按钮
+            document.querySelector('#btn-add-link').addEventListener('click', showAddLinkModal);
+            document.querySelector('#btn-add-first-link').addEventListener('click', showAddLinkModal);
+
+            // 添加分类按钮
+            document.querySelector('#btn-add-category').addEventListener('click', showAddCategoryModal);
+
+            // 管理分类按钮
+            document.querySelector('#btn-manage-category').addEventListener('click', showManageCategoryModal);
+
+            // 用户设置
+            document.querySelector('#user-profile').addEventListener('click', function() {
+                window.location.href = 'P-SETTINGS.html';
+            });
+
+            document.querySelector('#mobile-settings-btn').addEventListener('click', function() {
+                window.location.href = 'P-SETTINGS.html';
+            });
+
+            // 表单提交
+            document.querySelector('#add-link-form').addEventListener('submit', handleAddLink);
+            document.querySelector('#edit-link-form').addEventListener('submit', handleEditLink);
+            document.querySelector('#add-category-form').addEventListener('submit', handleAddCategory);
+
+            // 弹窗关闭事件
+            document.querySelector('#close-add-link-modal').addEventListener('click', hideAddLinkModal);
+            document.querySelector('#cancel-add-link').addEventListener('click', hideAddLinkModal);
+            document.querySelector('#close-edit-link-modal').addEventListener('click', hideEditLinkModal);
+            document.querySelector('#cancel-edit-link').addEventListener('click', hideEditLinkModal);
+            document.querySelector('#close-add-category-modal').addEventListener('click', hideAddCategoryModal);
+            document.querySelector('#cancel-add-category').addEventListener('click', hideAddCategoryModal);
+            document.querySelector('#close-manage-category-modal').addEventListener('click', hideManageCategoryModal);
+            document.querySelector('#cancel-confirm').addEventListener('click', hideConfirmModal);
+            document.querySelector('#confirm-action').addEventListener('click', handleConfirmAction);
+
+            // ESC键关闭弹窗
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    hideAddLinkModal();
+                    hideEditLinkModal();
+                    hideAddCategoryModal();
+                    hideManageCategoryModal();
+                    hideConfirmModal();
+                }
+            });
+
+            // 点击弹窗背景关闭
+            document.querySelectorAll('.fixed.inset-0').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        function switchCategory(category) {
+            currentCategory = category;
+            currentSearch = '';
+            document.querySelector('#global-search').value = '';
+
+            // 更新分类按钮状态
+            document.querySelectorAll('[data-category]').forEach(button => {
+                if (button.dataset.category === category) {
+                    button.classList.remove('nav-item-inactive', 'text-slate-600');
+                    button.classList.add('nav-item-active');
+                } else {
+                    button.classList.remove('nav-item-active');
+                    button.classList.add('nav-item-inactive', 'text-slate-600');
+                }
+            });
+
+            // 更新面包屑和标题
+            document.querySelector('#current-category-name').textContent = mockData.categories[category].name;
+            document.querySelector('#current-section-title').textContent = mockData.categories[category].name;
+
+            renderLinks();
+        }
+
+        function renderFavorites() {
+            const favoritesGrid = document.querySelector('#favorites-grid');
+            const favoriteLinks = mockData.links.filter(link => link.isFavorite);
+
+            favoritesGrid.innerHTML = favoriteLinks.map(link => `
+                <a href="${link.url}" target="_blank" class="glass-card group relative flex flex-col items-center justify-center p-6 rounded-2xl h-32 md:h-40 cursor-pointer" data-link-id="${link.id}">
+                    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button class="edit-favorite-btn text-slate-400 hover:text-slate-600 p-1" data-link-id="${link.id}">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                    </div>
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-white shadow-md flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                        <img src="${link.icon}" alt="${link.name}图标" data-category="图标" class="w-8 h-8 object-contain">
+                    </div>
+                    <span class="text-sm font-medium text-slate-700 group-hover:text-primary transition-colors">${link.name}</span>
+                </a>
+            `).join('');
+
+            // 为收藏网站添加编辑按钮事件
+            document.querySelectorAll('.edit-favorite-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showEditLinkModal(parseInt(this.dataset.linkId));
+                });
+            });
+        }
+
+        function renderLinks() {
+            const linksGrid = document.querySelector('#links-grid');
+            const emptyState = document.querySelector('#empty-state');
+
+            let filteredLinks = mockData.links;
+
+            // 按分类过滤
+            if (currentCategory !== 'all') {
+                filteredLinks = filteredLinks.filter(link => link.category === currentCategory);
+            }
+
+            // 按搜索词过滤
+            if (currentSearch) {
+                filteredLinks = filteredLinks.filter(link => 
+                    link.name.toLowerCase().includes(currentSearch) ||
+                    link.url.toLowerCase().includes(currentSearch)
+                );
+            }
+
+            // 排除收藏的链接
+            filteredLinks = filteredLinks.filter(link => !link.isFavorite);
+
+            if (filteredLinks.length === 0) {
+                linksGrid.style.display = 'none';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            linksGrid.style.display = 'grid';
+            emptyState.classList.add('hidden');
+
+            linksGrid.innerHTML = filteredLinks.map(link => `
+                <a href="${link.url}" target="_blank" class="glass-card flex items-center p-4 rounded-xl hover:bg-white transition-colors group" data-link-id="${link.id}">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                        <img src="${link.icon}" alt="${link.name}图标" data-category="图标" class="w-6 h-6 object-contain">
+                    </div>
+                    <div class="ml-3 overflow-hidden flex-1">
+                        <h3 class="text-sm font-semibold text-slate-800 truncate group-hover:text-primary">${link.name}</h3>
+                        <p class="text-xs text-slate-500 truncate">${link.url}</p>
+                    </div>
+                    <div class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                        <button class="edit-link-btn text-slate-400 hover:text-primary p-1" data-link-id="${link.id}">
+                            <i class="fa-solid fa-edit text-xs"></i>
+                        </button>
+                        <button class="delete-link-btn text-slate-400 hover:text-red-500 p-1" data-link-id="${link.id}">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                </a>
+            `).join('');
+
+            // 为链接添加编辑和删除事件
+            document.querySelectorAll('.edit-link-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showEditLinkModal(parseInt(this.dataset.linkId));
+                });
+            });
+
+            document.querySelectorAll('.delete-link-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showDeleteConfirmModal('link', parseInt(this.dataset.linkId));
+                });
+            });
+        }
+
+        function renderCategories() {
+            const categoryList = document.querySelector('#category-list');
+            
+            categoryList.innerHTML = Object.entries(mockData.categories).map(([id, category]) => `
+                <div class="flex items-center justify-between p-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <div class="flex items-center">
+                        <i class="fa-solid ${category.icon} text-lg text-slate-600 mr-3"></i>
+                        <span class="font-medium text-slate-800">${category.name}</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="edit-category-btn px-3 py-1 text-xs text-slate-600 hover:text-primary border border-slate-300 rounded-lg hover:border-primary transition-colors" data-category-id="${id}">
+                            编辑
+                        </button>
+                        <button class="delete-category-btn px-3 py-1 text-xs text-red-600 hover:text-red-700 border border-red-300 rounded-lg hover:border-red-400 transition-colors" data-category-id="${id}">
+                            删除
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // 为分类添加编辑和删除事件
+            document.querySelectorAll('.edit-category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    showEditCategoryModal(this.dataset.categoryId);
+                });
+            });
+
+            document.querySelectorAll('.delete-category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    showDeleteConfirmModal('category', this.dataset.categoryId);
+                });
+            });
+        }
+
+        function showAddLinkModal() {
+            document.querySelector('#add-link-modal').classList.remove('hidden');
+            document.querySelector('#add-link-form').reset();
+            document.querySelector('#link-category').value = currentCategory;
+            
+            // 显示动画
+            setTimeout(() => {
+                document.querySelector('#add-link-modal .modal-enter').classList.add('modal-enter-active');
+            }, 10);
+        }
+
+        function hideAddLinkModal() {
+            document.querySelector('#add-link-modal').classList.add('hidden');
+            document.querySelector('#add-link-modal .modal-enter').classList.remove('modal-enter-active');
+        }
+
+        function showEditLinkModal(linkId) {
+            const link = mockData.links.find(l => l.id === linkId);
+            if (!link) return;
+
+            document.querySelector('#edit-link-id').value = link.id;
+            document.querySelector('#edit-link-name').value = link.name;
+            document.querySelector('#edit-link-url').value = link.url;
+            document.querySelector('#edit-link-category').value = link.category;
+
+            document.querySelector('#edit-link-modal').classList.remove('hidden');
+            
+            // 显示动画
+            setTimeout(() => {
+                document.querySelector('#edit-link-modal .modal-enter').classList.add('modal-enter-active');
+            }, 10);
+        }
+
+        function hideEditLinkModal() {
+            document.querySelector('#edit-link-modal').classList.add('hidden');
+            document.querySelector('#edit-link-modal .modal-enter').classList.remove('modal-enter-active');
+        }
+
+        function showAddCategoryModal() {
+            document.querySelector('#add-category-modal').classList.remove('hidden');
+            document.querySelector('#add-category-form').reset();
+            
+            // 显示动画
+            setTimeout(() => {
+                document.querySelector('#add-category-modal .modal-enter').classList.add('modal-enter-active');
+            }, 10);
+        }
+
+        function hideAddCategoryModal() {
+            document.querySelector('#add-category-modal').classList.add('hidden');
+            document.querySelector('#add-category-modal .modal-enter').classList.remove('modal-enter-active');
+        }
+
+        function showManageCategoryModal() {
+            renderCategories();
+            document.querySelector('#manage-category-modal').classList.remove('hidden');
+            
+            // 显示动画
+            setTimeout(() => {
+                document.querySelector('#manage-category-modal .modal-enter').classList.add('modal-enter-active');
+            }, 10);
+        }
+
+        function hideManageCategoryModal() {
+            document.querySelector('#manage-category-modal').classList.add('hidden');
+            document.querySelector('#manage-category-modal .modal-enter').classList.remove('modal-enter-active');
+        }
+
+        function showDeleteConfirmModal(type, id) {
+            const isLink = type === 'link';
+            const item = isLink ? mockData.links.find(l => l.id === id) : mockData.categories[id];
+            
+            document.querySelector('#confirm-title').textContent = '确认删除';
+            document.querySelector('#confirm-message').textContent = isLink 
+                ? `确定要删除"${item.name}"吗？`
+                : `确定要删除分类"${item.name}"吗？分类下的所有链接也将被删除。`;
+            
+            confirmAction = () => {
+                if (isLink) {
+                    deleteLink(id);
+                } else {
+                    deleteCategory(id);
+                }
+            };
+
+            document.querySelector('#confirm-modal').classList.remove('hidden');
+            
+            // 显示动画
+            setTimeout(() => {
+                document.querySelector('#confirm-modal .modal-enter').classList.add('modal-enter-active');
+            }, 10);
+        }
+
+        function hideConfirmModal() {
+            document.querySelector('#confirm-modal').classList.add('hidden');
+            document.querySelector('#confirm-modal .modal-enter').classList.remove('modal-enter-active');
+            confirmAction = null;
+        }
+
+        function handleConfirmAction() {
+            if (confirmAction) {
+                confirmAction();
+            }
+            hideConfirmModal();
+        }
+
+        function handleAddLink(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const newLink = {
+                id: Math.max(...mockData.links.map(l => l.id)) + 1,
+                name: formData.get('name'),
+                url: formData.get('url'),
+                category: formData.get('category'),
+                icon: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80',
+                isFavorite: false
+            };
+
+            mockData.links.push(newLink);
+            hideAddLinkModal();
+            renderLinks();
+        }
+
+        function handleEditLink(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const linkId = parseInt(formData.get('id'));
+            const linkIndex = mockData.links.findIndex(l => l.id === linkId);
+            
+            if (linkIndex !== -1) {
+                mockData.links[linkIndex] = {
+                    ...mockData.links[linkIndex],
+                    name: formData.get('name'),
+                    url: formData.get('url'),
+                    category: formData.get('category')
+                };
+            }
+
+            hideEditLinkModal();
+            renderFavorites();
+            renderLinks();
+        }
+
+        function handleAddCategory(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const categoryName = formData.get('name');
+            const categoryId = categoryName.toLowerCase().replace(/\s+/g, '-');
+            
+            mockData.categories[categoryId] = {
+                name: categoryName,
+                icon: 'fa-folder'
+            };
+
+            hideAddCategoryModal();
+            updateCategoryOptions();
+        }
+
+        function deleteLink(linkId) {
+            mockData.links = mockData.links.filter(l => l.id !== linkId);
+            renderFavorites();
+            renderLinks();
+        }
+
+        function deleteCategory(categoryId) {
+            if (categoryId === 'all') return; // 不能删除默认分类
+            
+            delete mockData.categories[categoryId];
+            mockData.links = mockData.links.filter(l => l.category !== categoryId);
+            
+            if (currentCategory === categoryId) {
+                switchCategory('all');
+            }
+            
+            updateCategoryOptions();
+            renderLinks();
+        }
+
+        function updateCategoryOptions() {
+            const categorySelects = document.querySelectorAll('#link-category, #edit-link-category');
+            
+            categorySelects.forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = Object.entries(mockData.categories).map(([id, category]) => 
+                    `<option value="${id}" ${currentValue === id ? 'selected' : ''}>${category.name}</option>`
+                ).join('');
+            });
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+            });
+            const dateString = now.toLocaleDateString('zh-CN', { 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'short' 
+            });
+            
+            document.querySelector('#current-time span:first-child').textContent = timeString;
+            document.querySelector('#current-time span:last-child').textContent = dateString;
+        }
+
+        function showEditCategoryModal(categoryId) {
+            // 这里可以实现分类编辑功能
+            console.log('编辑分类:', categoryId);
+        }
+    </script>
+
+</body>
+</html>

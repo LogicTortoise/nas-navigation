@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作确认 - 酷站导航</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // Indigo 600
+                        primaryHover: '#4338ca',
+                        secondary: '#10B981', // Emerald 500
+                        accent: '#F43F5E', // Rose 500
+                        danger: '#EF4444', // Red 500
+                        warning: '#F59E0B', // Amber 500
+                        success: '#10B981', // Emerald 500
+                        dark: '#1e293b',
+                        light: '#f8fafc',
+                        glassBorder: 'rgba(255, 255, 255, 0.2)',
+                        glassSurface: 'rgba(255, 255, 255, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+                        'glow': '0 0 15px rgba(79, 70, 229, 0.3)',
+                        'modal': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.2s ease-out',
+                        'scale-in': 'scaleIn 0.2s ease-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 自定义样式 - 玻璃拟态与现代感增强 */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* 动态背景图 */
+            background-image: url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { 
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn-primary {
+            background: theme('colors.primary');
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: theme('colors.primaryHover');
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.8);
+            color: theme('colors.dark');
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-danger {
+            background: theme('colors.danger');
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-warning {
+            background: theme('colors.warning');
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex items-center justify-center p-0 md:p-4 lg:p-6 text-slate-800">
+
+    <!-- 背景遮罩，用于提升文字可读性 -->
+    <div id="bg-overlay" class="fixed inset-0 bg-gradient-to-br from-indigo-100/30 to-purple-100/30 pointer-events-none z-0"></div>
+
+    <!-- 模态弹窗背景遮罩 -->
+    <div id="modal-backdrop" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center animate-fade-in">
+        
+        <!-- 确认弹窗内容 -->
+        <div id="confirm-modal" class="modal-content rounded-2xl w-full max-w-md mx-4 animate-scale-in">
+            
+            <!-- 弹窗头部 -->
+            <div id="modal-header" class="flex items-center justify-between p-6 pb-4">
+                <div class="flex items-center">
+                    <div id="modal-icon" class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mr-4">
+                        <i class="fa-solid fa-exclamation-triangle text-red-500 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 id="modal-title" class="text-xl font-bold text-slate-800">操作确认</h3>
+                        <p id="modal-subtitle" class="text-sm text-slate-500 mt-1">请确认您的操作</p>
+                    </div>
+                </div>
+                <button id="close-btn" class="text-slate-400 hover:text-slate-600 transition-colors p-1">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <!-- 弹窗内容区 -->
+            <div id="modal-body" class="px-6 pb-6">
+                <div class="space-y-4">
+                    <!-- 主要提示信息 -->
+                    <div id="main-message" class="text-slate-700 leading-relaxed">
+                        确定要执行此操作吗？此操作无法撤销。
+                    </div>
+
+                    <!-- 附加信息（可选） -->
+                    <div id="additional-info" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                        <div class="flex items-start">
+                            <i class="fa-solid fa-info-circle text-yellow-500 mt-0.5 mr-2"></i>
+                            <div class="text-sm text-yellow-800">
+                                <p id="additional-text">此操作将影响相关数据，请谨慎操作。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 详细信息列表（可选） -->
+                    <div id="detail-list" class="hidden space-y-2">
+                        <div class="flex items-center text-sm text-slate-600">
+                            <i class="fa-solid fa-circle text-xs text-slate-400 mr-2"></i>
+                            <span id="detail-item-1">将删除 3 个相关项目</span>
+                        </div>
+                        <div class="flex items-center text-sm text-slate-600">
+                            <i class="fa-solid fa-circle text-xs text-slate-400 mr-2"></i>
+                            <span id="detail-item-2">相关分类将被清空</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 弹窗底部操作按钮 -->
+            <div id="modal-footer" class="flex items-center justify-end space-x-3 px-6 pb-6">
+                <button id="cancel-btn" class="px-6 py-2.5 rounded-lg btn-secondary font-medium">
+                    <i class="fa-solid fa-times mr-2"></i>
+                    取消
+                </button>
+                <button id="confirm-btn" class="px-6 py-2.5 rounded-lg btn-danger font-medium">
+                    <i class="fa-solid fa-check mr-2"></i>
+                    确认删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数的辅助函数
+            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = decodeURIComponent(value);
+                }
+                return params;
+            }
+
+            // 获取URL参数
+            const params = getUrlParams();
+            
+            // 根据参数配置弹窗内容
+            configureModal(params);
+            
+            // 绑定事件监听器
+            bindEventListeners(params);
+            
+            // 聚焦到取消按钮（默认操作）
+            document.querySelector('#cancel-btn').focus();
+        });
+
+        // 配置弹窗内容
+        function configureModal(params) {
+            const modalIcon = document.querySelector('#modal-icon');
+            const modalTitle = document.querySelector('#modal-title');
+            const modalSubtitle = document.querySelector('#modal-subtitle');
+            const mainMessage = document.querySelector('#main-message');
+            const additionalInfo = document.querySelector('#additional-info');
+            const additionalText = document.querySelector('#additional-text');
+            const detailList = document.querySelector('#detail-list');
+            const confirmBtn = document.querySelector('#confirm-btn');
+            const cancelBtn = document.querySelector('#cancel-btn');
+
+            // 默认配置
+            let config = {
+                type: 'delete', // delete, warning, info, success
+                title: '操作确认',
+                subtitle: '请确认您的操作',
+                message: '确定要执行此操作吗？此操作无法撤销。',
+                confirmText: '确认删除',
+                cancelText: '取消',
+                additionalInfo: '',
+                details: []
+            };
+
+            // 根据操作类型配置
+            if (params.type) {
+                switch(params.type) {
+                    case 'delete_link':
+                        config = {
+                            ...config,
+                            type: 'delete',
+                            title: '删除网站链接',
+                            subtitle: '删除确认',
+                            message: `确定要删除网站链接"${params.linkName || '该网站'}"吗？`,
+                            confirmText: '确认删除',
+                            cancelText: '取消'
+                        };
+                        break;
+                        
+                    case 'delete_category':
+                        config = {
+                            ...config,
+                            type: 'delete',
+                            title: '删除分类',
+                            subtitle: '危险操作',
+                            message: `确定要删除分类"${params.categoryName || '该分类'}"吗？`,
+                            confirmText: '确认删除',
+                            cancelText: '取消',
+                            additionalInfo: '此分类下有网站链接，删除后这些链接将无法恢复。',
+                            details: params.linkCount ? [`该分类下有 ${params.linkCount} 个网站链接`] : []
+                        };
+                        break;
+                        
+                    case 'delete_category_with_links':
+                        config = {
+                            ...config,
+                            type: 'warning',
+                            title: '删除分类及链接',
+                            subtitle: '危险操作',
+                            message: `确定要删除分类"${params.categoryName || '该分类'}"以及其中的所有网站链接吗？`,
+                            confirmText: '确认删除',
+                            cancelText: '取消',
+                            additionalInfo: '此操作将永久删除分类及其所有内容，无法撤销。',
+                            details: params.linkCount ? [`将删除 ${params.linkCount} 个网站链接`] : []
+                        };
+                        break;
+                        
+                    case 'warning':
+                        config = {
+                            ...config,
+                            type: 'warning',
+                            title: params.title || '警告',
+                            subtitle: params.subtitle || '重要提醒',
+                            message: params.message || '此操作可能产生不可预期的后果。',
+                            confirmText: params.confirmText || '继续',
+                            cancelText: params.cancelText || '取消'
+                        };
+                        break;
+                        
+                    case 'info':
+                        config = {
+                            ...config,
+                            type: 'info',
+                            title: params.title || '信息确认',
+                            subtitle: params.subtitle || '请确认',
+                            message: params.message || '请确认您要执行的操作。',
+                            confirmText: params.confirmText || '确认',
+                            cancelText: params.cancelText || '取消'
+                        };
+                        break;
+                }
+            }
+
+            // 自定义参数覆盖
+            if (params.title) config.title = params.title;
+            if (params.subtitle) config.subtitle = params.subtitle;
+            if (params.message) config.message = params.message;
+            if (params.confirmText) config.confirmText = params.confirmText;
+            if (params.cancelText) config.cancelText = params.cancelText;
+            if (params.additionalInfo) config.additionalInfo = params.additionalInfo;
+
+            // 设置图标和样式
+            setModalIconAndStyle(config.type, modalIcon, confirmBtn);
+
+            // 设置文本内容
+            modalTitle.textContent = config.title;
+            modalSubtitle.textContent = config.subtitle;
+            mainMessage.textContent = config.message;
+            confirmBtn.innerHTML = `<i class="fa-solid fa-check mr-2"></i>${config.confirmText}`;
+            cancelBtn.innerHTML = `<i class="fa-solid fa-times mr-2"></i>${config.cancelText}`;
+
+            // 设置附加信息
+            if (config.additionalInfo) {
+                additionalText.textContent = config.additionalInfo;
+                additionalInfo.classList.remove('hidden');
+            }
+
+            // 设置详细信息列表
+            if (config.details && config.details.length > 0) {
+                detailList.classList.remove('hidden');
+                config.details.forEach((detail, index) => {
+                    const detailItem = document.querySelector(`#detail-item-${index + 1}`);
+                    if (detailItem) {
+                        detailItem.textContent = detail;
+                    }
+                });
+            }
+        }
+
+        // 设置弹窗图标和样式
+        function setModalIconAndStyle(type, iconElement, confirmBtn) {
+            const iconClasses = {
+                delete: 'fa-exclamation-triangle text-red-500',
+                warning: 'fa-exclamation-circle text-yellow-500',
+                info: 'fa-info-circle text-blue-500',
+                success: 'fa-check-circle text-green-500'
+            };
+
+            const iconBgClasses = {
+                delete: 'bg-red-100',
+                warning: 'bg-yellow-100',
+                info: 'bg-blue-100',
+                success: 'bg-green-100'
+            };
+
+            const btnClasses = {
+                delete: 'btn-danger',
+                warning: 'btn-warning',
+                info: 'btn-primary',
+                success: 'btn-primary'
+            };
+
+            const iconClass = iconClasses[type] || iconClasses.delete;
+            const bgClass = iconBgClasses[type] || iconBgClasses.delete;
+            const btnClass = btnClasses[type] || btnClasses.delete;
+
+            // 清除现有类
+            iconElement.className = `w-12 h-12 rounded-full flex items-center justify-center mr-4 ${bgClass}`;
+            confirmBtn.className = `px-6 py-2.5 rounded-lg font-medium ${btnClass}`;
+
+            // 设置图标
+            const icon = iconElement.querySelector('i');
+            icon.className = `fa-solid ${iconClass.split(' ')[0]} ${iconClass.split(' ')[1]} text-xl`;
+        }
+
+        // 绑定事件监听器
+        function bindEventListeners(params) {
+            const confirmBtn = document.querySelector('#confirm-btn');
+            const cancelBtn = document.querySelector('#cancel-btn');
+            const closeBtn = document.querySelector('#close-btn');
+            const modalBackdrop = document.querySelector('#modal-backdrop');
+
+            // 确认按钮点击事件
+            confirmBtn.addEventListener('click', function() {
+                handleConfirm(params);
+            });
+
+            // 取消按钮点击事件
+            cancelBtn.addEventListener('click', function() {
+                handleCancel();
+            });
+
+            // 关闭按钮点击事件
+            closeBtn.addEventListener('click', function() {
+                handleCancel();
+            });
+
+            // 点击背景遮罩关闭弹窗
+            modalBackdrop.addEventListener('click', function(e) {
+                if (e.target === modalBackdrop) {
+                    handleCancel();
+                }
+            });
+
+            // 键盘事件
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    handleCancel();
+                } else if (e.key === 'Enter') {
+                    handleConfirm(params);
+                }
+            });
+
+            // 焦点管理
+            [confirmBtn, cancelBtn, closeBtn].forEach(btn => {
+                btn.addEventListener('keydown', function(e) {
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const buttons = [cancelBtn, confirmBtn, closeBtn];
+                        const currentIndex = buttons.indexOf(e.target);
+                        const nextIndex = e.shiftKey ? 
+                            (currentIndex - 1 + buttons.length) % buttons.length : 
+                            (currentIndex + 1) % buttons.length;
+                        buttons[nextIndex].focus();
+                    }
+                });
+            });
+        }
+
+        // 处理确认操作
+        function handleConfirm(params) {
+            // 显示加载状态
+            const confirmBtn = document.querySelector('#confirm-btn');
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>处理中...';
+            confirmBtn.disabled = true;
+
+            // 模拟处理延迟
+            setTimeout(() => {
+                // 根据操作类型执行相应逻辑
+                const actionType = params.type || 'delete';
+                
+                // 在实际应用中，这里会调用API执行相应操作
+                console.log('确认操作:', actionType, params);
+                
+                // 操作完成后跳转回首页
+                window.location.href = 'P-HOME.html';
+            }, 800);
+        }
+
+        // 处理取消操作
+        function handleCancel() {
+            // 关闭弹窗，返回上一页或首页
+            if (document.referrer && document.referrer.includes(window.location.origin)) {
+                window.history.back();
+            } else {
+                window.location.href = 'P-HOME.html';
+            }
+        }
+    </script>
+</body>
+</html>

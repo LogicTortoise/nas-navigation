@@ -1,0 +1,30 @@
+# Binary
+nas-navigation
+*.exe
+
+# Database
+*.db
+*.sqlite
+
+# Backend
+backend/tmp/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Playwright
+.playwright-mcp/

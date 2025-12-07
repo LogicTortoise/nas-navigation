@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置 - 极简导航</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // Indigo 600
+                        primaryHover: '#4338ca',
+                        secondary: '#10B981', // Emerald 500
+                        accent: '#F43F5E', // Rose 500
+                        dark: '#1e293b',
+                        light: '#f8fafc',
+                        glassBorder: 'rgba(255, 255, 255, 0.2)',
+                        glassSurface: 'rgba(255, 255, 255, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+                        'glow': '0 0 15px rgba(79, 70, 229, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 自定义样式 - 玻璃拟态与现代感增强 */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* 动态背景图 */
+            background-image: url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.1);
+            border-color: theme('colors.primary');
+        }
+
+        .nav-item-active {
+            background: theme('colors.primary');
+            color: white;
+            box-shadow: theme('colors.glow');
+        }
+
+        .nav-item-inactive:hover {
+            background: rgba(255, 255, 255, 0.5);
+            color: theme('colors.primary');
+        }
+
+        /* 隐藏滚动条但保持功能 */
+        .hide-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .hide-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.1);
+            border-radius: 20px;
+        }
+
+        /* 搜索框聚焦动画 */
+        .search-focus:focus-within {
+            box-shadow: 0 0 0 2px theme('colors.primary'), 0 4px 12px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        /* 设置项样式 */
+        .setting-section {
+            transition: all 0.3s ease;
+        }
+
+        .setting-option {
+            transition: all 0.2s ease;
+        }
+
+        .setting-option:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .setting-option.selected {
+            background: theme('colors.primary');
+            color: white;
+        }
+
+        .avatar-upload-area {
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s ease;
+        }
+
+        .avatar-upload-area:hover {
+            border-color: theme('colors.primary');
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .form-input-focus:focus {
+            outline: none;
+            border-color: theme('colors.primary');
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex items-center justify-center p-0 md:p-4 lg:p-6 text-slate-800">
+
+    <!-- 背景遮罩，用于提升文字可读性 -->
+    <div id="bg-overlay" class="fixed inset-0 bg-gradient-to-br from-indigo-100/30 to-purple-100/30 pointer-events-none z-0"></div>
+
+    <!-- 主应用容器 -->
+    <div id="app-container" class="relative z-10 w-full h-full max-w-[1920px] flex flex-col md:flex-row gap-4 md:gap-6 overflow-hidden rounded-none md:rounded-3xl shadow-2xl glass-panel">
+        
+        <!-- 左侧侧边栏 (设置菜单) -->
+        <aside id="sidebar" class="hidden md:flex flex-col w-20 lg:w-64 h-full border-r border-glassBorder bg-white/30 transition-all duration-300">
+            <!-- Logo 区域 -->
+            <div id="sidebar-header" class="h-[80px] flex items-center justify-center lg:justify-start px-0 lg:px-8 border-b border-glassBorder">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white shadow-lg">
+                    <i class="fa-solid fa-cog text-xl"></i>
+                </div>
+                <span id="app-name" class="ml-3 text-xl font-bold tracking-tight text-slate-800 hidden lg:block">设置中心</span>
+            </div>
+
+            <!-- 设置菜单列表 -->
+            <nav id="settings-nav" class="flex-1 overflow-y-auto py-6 px-3 space-y-2 hide-scrollbar">
+                <!-- 账户设置 -->
+                <button id="setting-account" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl nav-item-active transition-all group" data-setting="account">
+                    <i class="fa-solid fa-user text-lg w-6 text-center"></i>
+                    <span class="ml-3 font-medium hidden lg:block">账户设置</span>
+                </button>
+
+                <!-- 外观设置 -->
+                <button id="setting-appearance" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl nav-item-inactive text-slate-600 transition-all group" data-setting="appearance">
+                    <i class="fa-solid fa-palette text-lg w-6 text-center group-hover:scale-110 transition-transform"></i>
+                    <span class="ml-3 font-medium hidden lg:block">外观设置</span>
+                </button>
+
+                <!-- 数据管理 -->
+                <button id="setting-data" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl nav-item-inactive text-slate-600 transition-all group" data-setting="data">
+                    <i class="fa-solid fa-database text-lg w-6 text-center group-hover:scale-110 transition-transform"></i>
+                    <span class="ml-3 font-medium hidden lg:block">数据管理</span>
+                </button>
+
+                <!-- 关于 -->
+                <button id="setting-about" class="w-full flex items-center justify-center lg:justify-start px-3 py-3 rounded-xl nav-item-inactive text-slate-600 transition-all group" data-setting="about">
+                    <i class="fa-solid fa-info-circle text-lg w-6 text-center group-hover:scale-110 transition-transform"></i>
+                    <span class="ml-3 font-medium hidden lg:block">关于</span>
+                </button>
+            </nav>
+
+            <!-- 底部返回 -->
+            <div id="sidebar-footer" class="p-4 border-t border-glassBorder">
+                <button id="btn-back-home" class="w-full flex items-center justify-center lg:justify-start p-2 rounded-xl hover:bg-white/40 transition-colors">
+                    <i class="fa-solid fa-arrow-left text-lg w-6 text-center"></i>
+                    <span class="ml-3 font-medium text-sm hidden lg:block">返回首页</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- 右侧主内容区 -->
+        <main id="main-content" class="flex-1 flex flex-col h-full overflow-hidden relative">
+            
+            <!-- 顶部导航栏 -->
+            <header id="top-nav" class="h-[80px] flex items-center justify-between px-6 md:px-10 py-4 shrink-0 z-20">
+                <!-- 移动端汉堡菜单 -->
+                <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-600 hover:text-primary">
+                    <i class="fa-solid fa-bars text-2xl"></i>
+                </button>
+
+                <!-- 移动端标题 -->
+                <span class="md:hidden text-lg font-bold text-slate-800">设置中心</span>
+
+                <!-- 搜索框 (桌面端) -->
+                <div id="search-container" class="hidden md:flex flex-1 max-w-2xl mx-auto relative group search-focus rounded-full transition-all duration-300 bg-white/60 backdrop-blur-md border border-white/50">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-search text-slate-400 group-focus-within:text-primary transition-colors"></i>
+                    </div>
+                    <input type="text" 
+                           id="global-search" 
+                           class="block w-full pl-12 pr-4 py-3 bg-transparent border-none rounded-full text-slate-800 placeholder-slate-400 focus:ring-0 sm:text-sm" 
+                           placeholder="搜索书签、Google 或输入网址...">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                        <span class="text-xs text-slate-400 border border-slate-300 rounded px-1.5 py-0.5">⌘K</span>
+                    </div>
+                </div>
+
+                <!-- 右侧操作区 -->
+                <div id="header-actions" class="flex items-center space-x-4 ml-4">
+                    <!-- 时间显示 -->
+                    <div id="current-time" class="hidden xl:flex flex-col items-end mr-4 text-right">
+                        <span class="text-lg font-bold text-slate-700 leading-none">09:41</span>
+                        <span class="text-xs text-slate-500">10月24日 周二</span>
+                    </div>
+                    
+                    <!-- 移动端返回 -->
+                    <button id="mobile-back-btn" class="md:hidden p-2 text-slate-600">
+                        <i class="fa-solid fa-arrow-left text-xl"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- 内容滚动区 -->
+            <div id="content-scroll-area" class="flex-1 overflow-y-auto p-6 md:p-10 hide-scrollbar">
+                
+                <!-- 账户设置 -->
+                <div id="account-settings" class="setting-section">
+                    <div class="mb-8">
+                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2">账户设置</h1>
+                        <p class="text-slate-500">管理您的个人信息和账户安全</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- 头像设置 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">头像设置</h3>
+                            <div class="flex items-center space-x-6">
+                                <div class="relative">
+                                    <img id="current-avatar" 
+                                         src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+                                         alt="当前头像" 
+                                         data-category="人物"
+                                         class="w-20 h-20 rounded-full border-4 border-white shadow-lg object-cover">
+                                    <div class="absolute -bottom-1 -right-1 w-6 h-6 bg-secondary rounded-full flex items-center justify-center text-white text-xs shadow-md">
+                                        <i class="fa-solid fa-check"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <button id="btn-upload-avatar" class="avatar-upload-area rounded-xl p-4 text-center cursor-pointer">
+                                        <i class="fa-solid fa-camera text-2xl text-slate-400 mb-2"></i>
+                                        <p class="text-sm text-slate-600">点击上传新头像</p>
+                                        <p class="text-xs text-slate-400 mt-1">支持 JPG、PNG 格式，最大 2MB</p>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 个人信息 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">个人信息</h3>
+                            <form id="profile-form" class="space-y-4">
+                                <div>
+                                    <label for="username" class="block text-sm font-medium text-slate-700 mb-2">用户名</label>
+                                    <input type="text" 
+                                           id="username" 
+                                           name="username" 
+                                           value="Alex Designer" 
+                                           class="w-full px-4 py-3 rounded-lg border border-slate-300 form-input-focus bg-white/80 backdrop-blur-sm" 
+                                           placeholder="请输入用户名">
+                                </div>
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-slate-700 mb-2">邮箱地址</label>
+                                    <input type="email" 
+                                           id="email" 
+                                           name="email" 
+                                           value="alex@example.com" 
+                                           class="w-full px-4 py-3 rounded-lg border border-slate-300 form-input-focus bg-white/80 backdrop-blur-sm" 
+                                           placeholder="请输入邮箱地址"
+                                           readonly>
+                                    <p class="text-xs text-slate-400 mt-1">邮箱地址不可修改</p>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- 密码修改 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">密码修改</h3>
+                            <form id="password-form" class="space-y-4">
+                                <div>
+                                    <label for="current-password" class="block text-sm font-medium text-slate-700 mb-2">当前密码</label>
+                                    <input type="password" 
+                                           id="current-password" 
+                                           name="current-password" 
+                                           class="w-full px-4 py-3 rounded-lg border border-slate-300 form-input-focus bg-white/80 backdrop-blur-sm" 
+                                           placeholder="请输入当前密码">
+                                </div>
+                                <div>
+                                    <label for="new-password" class="block text-sm font-medium text-slate-700 mb-2">新密码</label>
+                                    <input type="password" 
+                                           id="new-password" 
+                                           name="new-password" 
+                                           class="w-full px-4 py-3 rounded-lg border border-slate-300 form-input-focus bg-white/80 backdrop-blur-sm" 
+                                           placeholder="请输入新密码">
+                                </div>
+                                <div>
+                                    <label for="confirm-password" class="block text-sm font-medium text-slate-700 mb-2">确认新密码</label>
+                                    <input type="password" 
+                                           id="confirm-password" 
+                                           name="confirm-password" 
+                                           class="w-full px-4 py-3 rounded-lg border border-slate-300 form-input-focus bg-white/80 backdrop-blur-sm" 
+                                           placeholder="请再次输入新密码">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 外观设置 -->
+                <div id="appearance-settings" class="setting-section hidden">
+                    <div class="mb-8">
+                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2">外观设置</h1>
+                        <p class="text-slate-500">个性化您的导航页面</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- 主题切换 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">主题模式</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button id="theme-light" class="setting-option selected p-4 rounded-xl text-center transition-all">
+                                    <i class="fa-solid fa-sun text-2xl text-yellow-500 mb-2"></i>
+                                    <p class="font-medium">亮色模式</p>
+                                    <p class="text-xs text-slate-500">清爽明亮的界面</p>
+                                </button>
+                                <button id="theme-dark" class="setting-option p-4 rounded-xl text-center transition-all">
+                                    <i class="fa-solid fa-moon text-2xl text-slate-600 mb-2"></i>
+                                    <p class="font-medium">暗色模式</p>
+                                    <p class="text-xs text-slate-500">护眼深色主题</p>
+                                </button>
+                                <button id="theme-auto" class="setting-option p-4 rounded-xl text-center transition-all">
+                                    <i class="fa-solid fa-circle-half-stroke text-2xl text-slate-600 mb-2"></i>
+                                    <p class="font-medium">跟随系统</p>
+                                    <p class="text-xs text-slate-500">自动切换主题</p>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 背景设置 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">背景设置</h3>
+                            <div class="space-y-4">
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <button class="bg-option selected aspect-square rounded-xl overflow-hidden border-2 border-primary" data-bg="https://images.unsplash.com/photo-1477346611705-65d1883cee1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80">
+                                        <img src="https://images.unsplash.com/photo-1477346611705-65d1883cee1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+                                             alt="默认背景" 
+                                             data-category="自然风景"
+                                             class="w-full h-full object-cover">
+                                    </button>
+                                    <button class="bg-option aspect-square rounded-xl overflow-hidden border-2 border-slate-300" data-bg="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80">
+                                        <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+                                             alt="山脉背景" 
+                                             data-category="自然风景"
+                                             class="w-full h-full object-cover">
+                                    </button>
+                                    <button class="bg-option aspect-square rounded-xl overflow-hidden border-2 border-slate-300" data-bg="https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80">
+                                        <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+                                             alt="森林背景" 
+                                             data-category="自然风景"
+                                             class="w-full h-full object-cover">
+                                    </button>
+                                    <button class="bg-option aspect-square rounded-xl overflow-hidden border-2 border-slate-300" data-bg="custom">
+                                        <div class="w-full h-full flex items-center justify-center bg-slate-100">
+                                            <i class="fa-solid fa-upload text-2xl text-slate-400"></i>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 布局设置 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">布局设置</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-2">网站链接布局</label>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <button id="layout-grid" class="setting-option selected p-4 rounded-xl text-center transition-all">
+                                            <i class="fa-solid fa-th text-2xl text-slate-600 mb-2"></i>
+                                            <p class="font-medium">宫格布局</p>
+                                            <p class="text-xs text-slate-500">整齐的网格排列</p>
+                                        </button>
+                                        <button id="layout-list" class="setting-option p-4 rounded-xl text-center transition-all">
+                                            <i class="fa-solid fa-list text-2xl text-slate-600 mb-2"></i>
+                                            <p class="font-medium">列表布局</p>
+                                            <p class="text-xs text-slate-500">简洁的列表显示</p>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 搜索设置 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">搜索设置</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-2">默认搜索引擎</label>
+                                    <select id="search-engine" class="w-full px-4 py-3 rounded-lg border border-slate-300 form-input-focus bg-white/80 backdrop-blur-sm">
+                                        <option value="google">Google</option>
+                                        <option value="baidu" selected>百度</option>
+                                        <option value="bing">Bing</option>
+                                        <option value="yahoo">Yahoo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 数据管理 -->
+                <div id="data-settings" class="setting-section hidden">
+                    <div class="mb-8">
+                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2">数据管理</h1>
+                        <p class="text-slate-500">管理您的书签数据</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- 数据导入 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">数据导入</h3>
+                            <div class="space-y-4">
+                                <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                                    <i class="fa-solid fa-download text-3xl text-slate-400 mb-3"></i>
+                                    <h4 class="font-medium text-slate-800 mb-2">从浏览器导入书签</h4>
+                                    <p class="text-sm text-slate-500 mb-4">支持 Chrome、Firefox、Safari 等主流浏览器</p>
+                                    <button id="btn-import-bookmarks" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primaryHover transition-colors">
+                                        开始导入
+                                    </button>
+                                </div>
+                                <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer">
+                                    <i class="fa-solid fa-file-import text-3xl text-slate-400 mb-3"></i>
+                                    <h4 class="font-medium text-slate-800 mb-2">从文件导入</h4>
+                                    <p class="text-sm text-slate-500 mb-4">支持 HTML 书签文件格式</p>
+                                    <input type="file" id="file-import" accept=".html" class="hidden">
+                                    <button id="btn-import-file" class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
+                                        选择文件
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 数据导出 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">数据导出</h3>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-slate-50 rounded-xl">
+                                    <h4 class="font-medium text-slate-800 mb-2">导出所有数据</h4>
+                                    <p class="text-sm text-slate-500 mb-4">包含所有书签、分类和设置信息</p>
+                                    <button id="btn-export-all" class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-emerald-600 transition-colors">
+                                        <i class="fa-solid fa-download mr-2"></i>
+                                        导出全部数据
+                                    </button>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-xl">
+                                    <h4 class="font-medium text-slate-800 mb-2">仅导出书签</h4>
+                                    <p class="text-sm text-slate-500 mb-4">导出为标准 HTML 书签格式</p>
+                                    <button id="btn-export-bookmarks" class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
+                                        <i class="fa-solid fa-bookmark mr-2"></i>
+                                        导出书签
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 关于 -->
+                <div id="about-settings" class="setting-section hidden">
+                    <div class="mb-8">
+                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2">关于</h1>
+                        <p class="text-slate-500">极简导航 - 您的专属数字空间</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- 产品信息 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <div class="text-center mb-6">
+                                <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white shadow-lg mx-auto mb-4">
+                                    <i class="fa-solid fa-compass text-3xl"></i>
+                                </div>
+                                <h2 class="text-2xl font-bold text-slate-800 mb-2">极简导航</h2>
+                                <p class="text-slate-500">版本 1.0.0</p>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                                    <span class="text-slate-600">开发者</span>
+                                    <span class="font-medium">极简团队</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                                    <span class="text-slate-600">发布日期</span>
+                                    <span class="font-medium">2024年10月</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                                    <span class="text-slate-600">最后更新</span>
+                                    <span class="font-medium">2024年10月24日</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 帮助与支持 -->
+                        <div class="glass-card rounded-2xl p-6">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-4">帮助与支持</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <a href="#" class="flex items-center p-4 rounded-xl hover:bg-slate-50 transition-colors group">
+                                    <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-question-circle"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h4 class="font-medium text-slate-800 group-hover:text-primary">帮助文档</h4>
+                                        <p class="text-sm text-slate-500">查看使用指南</p>
+                                    </div>
+                                </a>
+                                <a href="#" class="flex items-center p-4 rounded-xl hover:bg-slate-50 transition-colors group">
+                                    <div class="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-comment-dots"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h4 class="font-medium text-slate-800 group-hover:text-primary">反馈建议</h4>
+                                        <p class="text-sm text-slate-500">联系我们</p>
+                                    </div>
+                                </a>
+                                <a href="#" class="flex items-center p-4 rounded-xl hover:bg-slate-50 transition-colors group">
+                                    <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-bug"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h4 class="font-medium text-slate-800 group-hover:text-primary">问题反馈</h4>
+                                        <p class="text-sm text-slate-500">报告错误</p>
+                                    </div>
+                                </a>
+                                <a href="#" class="flex items-center p-4 rounded-xl hover:bg-slate-50 transition-colors group">
+                                    <div class="w-10 h-10 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                                        <i class="fa-solid fa-star"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <h4 class="font-medium text-slate-800 group-hover:text-primary">功能投票</h4>
+                                        <p class="text-sm text-slate-500">为新功能投票</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 版权信息 -->
+                        <div class="glass-card rounded-2xl p-6 text-center">
+                            <p class="text-slate-500 mb-2">© 2024 极简导航. 保留所有权利.</p>
+                            <div class="flex justify-center space-x-6 text-sm text-slate-400">
+                                <a href="#" class="hover:text-primary transition-colors">隐私政策</a>
+                                <a href="#" class="hover:text-primary transition-colors">服务条款</a>
+                                <a href="#" class="hover:text-primary transition-colors">开源协议</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 保存按钮区域 -->
+                <div id="save-section" class="mt-8 mb-6">
+                    <div class="flex justify-end space-x-4">
+                        <button id="btn-cancel" class="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium">
+                            取消
+                        </button>
+                        <button id="btn-save" class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primaryHover transition-colors font-medium shadow-lg shadow-indigo-500/30">
+                            <i class="fa-solid fa-save mr-2"></i>
+                            保存设置
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 底部留白 -->
+                <div class="h-10"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置菜单切换
+            const settingButtons = document.querySelectorAll('[data-setting]');
+            const settingSections = document.querySelectorAll('.setting-section');
+            
+            settingButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const settingType = this.getAttribute('data-setting');
+                    
+                    // 更新按钮状态
+                    settingButtons.forEach(btn => {
+                        btn.classList.remove('nav-item-active');
+                        btn.classList.add('nav-item-inactive');
+                    });
+                    this.classList.remove('nav-item-inactive');
+                    this.classList.add('nav-item-active');
+                    
+                    // 显示对应设置区域
+                    settingSections.forEach(section => {
+                        section.classList.add('hidden');
+                    });
+                    document.querySelector(`#${settingType}-settings`).classList.remove('hidden');
+                });
+            });
+
+            // 主题切换
+            const themeButtons = document.querySelectorAll('[id^="theme-"]');
+            themeButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    themeButtons.forEach(btn => btn.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+
+            // 背景选择
+            const bgOptions = document.querySelectorAll('.bg-option');
+            bgOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    bgOptions.forEach(opt => {
+                        opt.classList.remove('selected', 'border-primary');
+                        opt.classList.add('border-slate-300');
+                    });
+                    this.classList.add('selected', 'border-primary');
+                    this.classList.remove('border-slate-300');
+                });
+            });
+
+            // 布局选择
+            const layoutButtons = document.querySelectorAll('[id^="layout-"]');
+            layoutButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    layoutButtons.forEach(btn => btn.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+
+            // 头像上传
+            document.querySelector('#btn-upload-avatar').addEventListener('click', function() {
+                console.log('需要调用第三方接口实现头像上传功能');
+                // 注释：此功能需要文件上传API，在原型阶段仅做UI展示
+            });
+
+            // 文件导入
+            document.querySelector('#btn-import-file').addEventListener('click', function() {
+                document.querySelector('#file-import').click();
+            });
+
+            document.querySelector('#file-import').addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    console.log('需要调用第三方接口实现文件导入功能');
+                    // 注释：此功能需要文件读取API，在原型阶段仅做UI展示
+                }
+            });
+
+            // 数据导入导出
+            document.querySelector('#btn-import-bookmarks').addEventListener('click', function() {
+                console.log('需要调用第三方接口实现浏览器书签导入功能');
+                // 注释：此功能需要浏览器书签API，在原型阶段仅做UI展示
+            });
+
+            document.querySelector('#btn-export-all').addEventListener('click', function() {
+                console.log('需要调用第三方接口实现数据导出功能');
+                // 注释：此功能需要文件下载API，在原型阶段仅做UI展示
+            });
+
+            document.querySelector('#btn-export-bookmarks').addEventListener('click', function() {
+                console.log('需要调用第三方接口实现书签导出功能');
+                // 注释：此功能需要文件下载API，在原型阶段仅做UI展示
+            });
+
+            // 表单提交
+            document.querySelector('#profile-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                // 处理个人信息更新
+                console.log('个人信息已更新');
+            });
+
+            document.querySelector('#password-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                // 处理密码更新
+                console.log('密码已更新');
+            });
+
+            // 保存设置
+            document.querySelector('#btn-save').addEventListener('click', function() {
+                // 收集所有设置数据
+                const settings = {
+                    theme: document.querySelector('.setting-option.selected').id.replace('theme-', ''),
+                    background: document.querySelector('.bg-option.selected').getAttribute('data-bg'),
+                    layout: document.querySelector('[id^="layout-"].selected').id.replace('layout-', ''),
+                    searchEngine: document.querySelector('#search-engine').value,
+                    username: document.querySelector('#username').value
+                };
+                
+                console.log('设置已保存:', settings);
+                
+                // 显示保存成功提示
+                this.innerHTML = '<i class="fa-solid fa-check mr-2"></i>已保存';
+                this.classList.add('bg-secondary');
+                this.classList.remove('bg-primary');
+                
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fa-solid fa-save mr-2"></i>保存设置';
+                    this.classList.remove('bg-secondary');
+                    this.classList.add('bg-primary');
+                }, 2000);
+            });
+
+            // 取消按钮
+            document.querySelector('#btn-cancel').addEventListener('click', function() {
+                if (confirm('确定要取消所有未保存的更改吗？')) {
+                    location.reload();
+                }
+            });
+
+            // 返回首页
+            document.querySelector('#btn-back-home').addEventListener('click', function() {
+                window.location.href = 'P-HOME.html';
+            });
+
+            document.querySelector('#mobile-back-btn').addEventListener('click', function() {
+                window.location.href = 'P-HOME.html';
+            });
+
+            // 移动端菜单切换
+            document.querySelector('#mobile-menu-btn').addEventListener('click', function() {
+                const sidebar = document.querySelector('#sidebar');
+                sidebar.classList.toggle('hidden');
+                sidebar.classList.toggle('fixed');
+                sidebar.classList.toggle('z-50');
+                sidebar.classList.toggle('inset-0');
+            });
+
+            // 搜索功能
+            document.querySelector('#global-search').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = this.value.trim();
+                    if (query) {
+                        console.log('搜索:', query);
+                        // 这里可以实现搜索功能
+                    }
+                }
+            });
+
+            // 更新时间显示
+            function updateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('zh-CN', { 
+                    hour12: false, 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                const dateString = now.toLocaleDateString('zh-CN', { 
+                    month: 'long', 
+                    day: 'numeric', 
+                    weekday: 'short' 
+                });
+                
+                document.querySelector('#current-time span:first-child').textContent = timeString;
+                document.querySelector('#current-time span:last-child').textContent = dateString;
+            }
+            
+            updateTime();
+            setInterval(updateTime, 60000); // 每分钟更新一次
+        });
+    </script>
+
+</body>
+</html>

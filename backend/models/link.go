@@ -1,0 +1,30 @@
+package models
+
+import (
+	"time"
+)
+
+type Link struct {
+	ID          uint      `json:"id" gorm:"primaryKey"`
+	CategoryID  uint      `json:"category_id" gorm:"not null"`
+	Name        string    `json:"name" gorm:"size:100;not null"`
+	URL         string    `json:"url" gorm:"size:500;not null"`
+	Icon        string    `json:"icon" gorm:"size:500"`
+	Description string    `json:"description" gorm:"size:500"`
+	SortOrder   int       `json:"sort_order" gorm:"default:0"`
+	ScriptID    *uint     `json:"script_id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Category    *Category `json:"category,omitempty" gorm:"foreignKey:CategoryID"`
+	Script      *Script   `json:"script,omitempty" gorm:"foreignKey:ScriptID"`
+}
+
+type LinkRequest struct {
+	CategoryID  uint   `json:"category_id" binding:"required"`
+	Name        string `json:"name" binding:"required,max=100"`
+	URL         string `json:"url" binding:"required,max=500"`
+	Icon        string `json:"icon" binding:"max=500"`
+	Description string `json:"description" binding:"max=500"`
+	SortOrder   int    `json:"sort_order"`
+	ScriptID    *uint  `json:"script_id"`
+}

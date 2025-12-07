@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑网站链接 - 酷站导航</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // Indigo 600
+                        primaryHover: '#4338ca',
+                        secondary: '#10B981', // Emerald 500
+                        accent: '#F43F5E', // Rose 500
+                        dark: '#1e293b',
+                        light: '#f8fafc',
+                        glassBorder: 'rgba(255, 255, 255, 0.2)',
+                        glassSurface: 'rgba(255, 255, 255, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+                        'glow': '0 0 15px rgba(79, 70, 229, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 自定义样式 - 玻璃拟态与现代感增强 */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* 动态背景图 */
+            background-image: url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-input-focus:focus {
+            outline: none;
+            border-color: theme('colors.primary');
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .icon-preview {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+
+        .icon-preview:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex items-center justify-center p-0 md:p-4 lg:p-6 text-slate-800">
+
+    <!-- 背景遮罩，用于提升文字可读性 -->
+    <div id="bg-overlay" class="fixed inset-0 bg-gradient-to-br from-indigo-100/30 to-purple-100/30 pointer-events-none z-0"></div>
+
+    <!-- 模态弹窗背景遮罩 -->
+    <div id="modal-backdrop" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4">
+        
+        <!-- 编辑链接弹窗 -->
+        <div id="edit-link-modal" class="modal-content rounded-2xl shadow-2xl w-full max-w-md lg:max-w-lg p-6 animate-fade-in-up">
+            
+            <!-- 弹窗头部 -->
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800 flex items-center">
+                    <i class="fa-solid fa-edit text-primary mr-2"></i>
+                    编辑网站链接
+                </h3>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- 编辑表单 -->
+            <form id="edit-link-form" class="space-y-6">
+                
+                <!-- 网站图标预览 -->
+                <div class="text-center mb-6">
+                    <div id="icon-preview" class="icon-preview mx-auto mb-2">
+                        <img id="preview-icon" 
+                             src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" 
+                             alt="网站图标" 
+                             data-category="图标"
+                             class="w-8 h-8 object-contain">
+                    </div>
+                    <p class="text-sm text-slate-500">网站图标预览</p>
+                </div>
+
+                <!-- 网站名称 -->
+                <div>
+                    <label for="link-name" class="block text-sm font-medium text-slate-700 mb-2">
+                        <i class="fa-solid fa-tag text-primary mr-1"></i>
+                        网站名称 <span class="text-accent">*</span>
+                    </label>
+                    <input type="text" 
+                           id="link-name" 
+                           name="link-name" 
+                           class="w-full px-4 py-3 rounded-lg border border-slate-300 form-input-focus transition-all bg-white/80 backdrop-blur-sm" 
+                           placeholder="请输入网站名称"
+                           value="Dribbble"
+                           required>
+                </div>
+
+                <!-- 网站URL -->
+                <div>
+                    <label for="link-url" class="block text-sm font-medium text-slate-700 mb-2">
+                        <i class="fa-solid fa-link text-primary mr-1"></i>
+                        网站 URL <span class="text-accent">*</span>
+                    </label>
+                    <input type="url" 
+                           id="link-url" 
+                           name="link-url" 
+                           class="w-full px-4 py-3 rounded-lg border border-slate-300 form-input-focus transition-all bg-white/80 backdrop-blur-sm" 
+                           placeholder="https://example.com"
+                           value="https://dribbble.com"
+                           required>
+                    <p class="text-xs text-slate-500 mt-1">
+                        <i class="fa-info-circle mr-1"></i>
+                        输入URL后将自动获取网站图标
+                    </p>
+                </div>
+
+                <!-- 所属分类 -->
+                <div>
+                    <label for="link-category" class="block text-sm font-medium text-slate-700 mb-2">
+                        <i class="fa-solid fa-folder text-primary mr-1"></i>
+                        所属分类
+                    </label>
+                    <select id="link-category" 
+                            name="link-category" 
+                            class="w-full px-4 py-3 rounded-lg border border-slate-300 form-input-focus transition-all bg-white/80 backdrop-blur-sm">
+                        <option value="work">工作效率</option>
+                        <option value="study">学习充电</option>
+                        <option value="design" selected>设计灵感</option>
+                        <option value="entertainment">娱乐摸鱼</option>
+                    </select>
+                </div>
+
+                <!-- 自定义图标选项 -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                        <i class="fa-solid fa-palette text-primary mr-1"></i>
+                        自定义图标
+                    </label>
+                    <div class="grid grid-cols-6 gap-3">
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg border-2 border-slate-200 hover:border-primary transition-colors flex items-center justify-center" data-icon="fas fa-globe">
+                            <i class="fa-solid fa-globe text-slate-600"></i>
+                        </button>
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg border-2 border-slate-200 hover:border-primary transition-colors flex items-center justify-center" data-icon="fas fa-star">
+                            <i class="fa-solid fa-star text-slate-600"></i>
+                        </button>
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg border-2 border-slate-200 hover:border-primary transition-colors flex items-center justify-center" data-icon="fas fa-heart">
+                            <i class="fa-solid fa-heart text-slate-600"></i>
+                        </button>
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg border-2 border-slate-200 hover:border-primary transition-colors flex items-center justify-center" data-icon="fas fa-lightbulb">
+                            <i class="fa-solid fa-lightbulb text-slate-600"></i>
+                        </button>
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg border-2 border-slate-200 hover:border-primary transition-colors flex items-center justify-center" data-icon="fas fa-rocket">
+                            <i class="fa-solid fa-rocket text-slate-600"></i>
+                        </button>
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg border-2 border-dashed border-slate-300 hover:border-primary transition-colors flex items-center justify-center" id="upload-icon-btn">
+                            <i class="fa-solid fa-upload text-slate-400"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2">选择预设图标或上传自定义图标</p>
+                </div>
+
+                <!-- 表单底部操作按钮 -->
+                <div class="pt-4 flex space-x-3">
+                    <button type="button" 
+                            id="cancel-btn" 
+                            class="flex-1 px-4 py-3 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-colors">
+                        <i class="fa-solid fa-times mr-2"></i>
+                        取消
+                    </button>
+                    <button type="submit" 
+                            id="save-btn" 
+                            class="flex-1 px-4 py-3 rounded-lg bg-primary text-white hover:bg-primaryHover font-medium shadow-lg shadow-indigo-500/30 transition-all transform hover:-translate-y-0.5">
+                        <i class="fa-solid fa-check mr-2"></i>
+                        保存更改
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数的辅助函数
+            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = value;
+                }
+                return params;
+            }
+
+            // 模拟链接数据
+            const mockLinks = {
+                "link1": {
+                    name: "Dribbble",
+                    url: "https://dribbble.com",
+                    category: "design",
+                    icon: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
+                },
+                "link2": {
+                    name: "GitHub",
+                    url: "https://github.com",
+                    category: "work",
+                    icon: "https://github.githubassets.com/favicons/favicon.svg"
+                },
+                "link3": {
+                    name: "Notion",
+                    url: "https://notion.so",
+                    category: "work",
+                    icon: "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80"
+                }
+            };
+
+            // 获取URL参数
+            const params = getUrlParams();
+            const linkId = params.linkId || 'link1'; // 默认使用link1
+
+            // 加载链接数据
+            function loadLinkData(linkId) {
+                const link = mockLinks[linkId];
+                if (link) {
+                    document.querySelector('#link-name').value = link.name;
+                    document.querySelector('#link-url').value = link.url;
+                    document.querySelector('#link-category').value = link.category;
+                    document.querySelector('#preview-icon').src = link.icon;
+                    document.querySelector('#preview-icon').alt = link.name + '图标';
+                }
+            }
+
+            // 初始化页面数据
+            loadLinkData(linkId);
+
+            // URL输入框变化时自动获取图标
+            document.querySelector('#link-url').addEventListener('input', function() {
+                const url = this.value.trim();
+                if (url) {
+                    // 模拟获取Favicon
+                    const faviconUrl = new URL(url).origin + '/favicon.ico';
+                    const previewIcon = document.querySelector('#preview-icon');
+                    
+                    // 尝试加载Favicon
+                    previewIcon.onload = function() {
+                        // 加载成功，保持新图标
+                    };
+                    previewIcon.onerror = function() {
+                        // 加载失败，使用默认图标
+                        previewIcon.src = 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80';
+                    };
+                    previewIcon.src = faviconUrl;
+                }
+            });
+
+            // 图标选择功能
+            document.querySelectorAll('.icon-option').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 移除其他按钮的选中状态
+                    document.querySelectorAll('.icon-option').forEach(btn => {
+                        btn.classList.remove('border-primary', 'bg-primary/10');
+                        btn.classList.add('border-slate-200');
+                    });
+                    
+                    // 设置当前按钮为选中状态
+                    this.classList.remove('border-slate-200');
+                    this.classList.add('border-primary', 'bg-primary/10');
+                    
+                    // 更新预览图标
+                    const iconClass = this.dataset.icon;
+                    if (iconClass) {
+                        const previewIcon = document.querySelector('#preview-icon');
+                        previewIcon.outerHTML = `<i class="${iconClass} text-2xl text-primary"></i>`;
+                    }
+                });
+            });
+
+            // 上传图标功能
+            document.querySelector('#upload-icon-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('需要调用第三方接口实现文件上传功能');
+                // 注释：此功能需要文件上传API，在原型阶段仅做UI展示
+            });
+
+            // 表单提交
+            document.querySelector('#edit-link-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    name: document.querySelector('#link-name').value,
+                    url: document.querySelector('#link-url').value,
+                    category: document.querySelector('#link-category').value,
+                    icon: document.querySelector('#preview-icon').src
+                };
+                
+                // 模拟保存操作
+                console.log('保存链接数据:', formData);
+                
+                // 显示保存成功提示
+                const saveBtn = document.querySelector('#save-btn');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<i class="fa-solid fa-check mr-2"></i>已保存';
+                saveBtn.disabled = true;
+                
+                setTimeout(() => {
+                    // 跳转回首页
+                    window.location.href = 'P-HOME.html';
+                }, 1000);
+            });
+
+            // 取消按钮
+            document.querySelector('#cancel-btn').addEventListener('click', function() {
+                window.location.href = 'P-HOME.html';
+            });
+
+            // 关闭弹窗按钮
+            document.querySelector('#close-modal-btn').addEventListener('click', function() {
+                window.location.href = 'P-HOME.html';
+            });
+
+            // ESC键关闭弹窗
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    window.location.href = 'P-HOME.html';
+                }
+            });
+
+            // 点击背景遮罩关闭弹窗
+            document.querySelector('#modal-backdrop').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    window.location.href = 'P-HOME.html';
+                }
+            });
+
+            // 阻止弹窗内容区域的点击事件冒泡
+            document.querySelector('#edit-link-modal').addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+    </script>
+</body>
+</html>

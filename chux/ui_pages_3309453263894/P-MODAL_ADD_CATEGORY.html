@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加分类 - 酷站导航</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // Indigo 600
+                        primaryHover: '#4338ca',
+                        secondary: '#10B981', // Emerald 500
+                        accent: '#F43F5E', // Rose 500
+                        dark: '#1e293b',
+                        light: '#f8fafc',
+                        glassBorder: 'rgba(255, 255, 255, 0.2)',
+                        glassSurface: 'rgba(255, 255, 255, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+                        'glow': '0 0 15px rgba(79, 70, 229, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 自定义样式 - 玻璃拟态与现代感增强 */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* 动态背景图 */
+            background-image: url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.1);
+            border-color: theme('colors.primary');
+        }
+
+        /* 模态弹窗动画 */
+        .modal-overlay {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translate(-50%, -45%) scale(0.95);
+            }
+            to { 
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        /* 图标选择器样式 */
+        .icon-selector {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .icon-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .icon-option:hover {
+            background: rgba(79, 70, 229, 0.1);
+            border-color: theme('colors.primary');
+            transform: scale(1.05);
+        }
+
+        .icon-option.selected {
+            background: theme('colors.primary');
+            color: white;
+            border-color: theme('colors.primary');
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        /* 表单输入框样式 */
+        .form-input {
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: theme('colors.primary');
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        /* 按钮样式 */
+        .btn-primary {
+            background: theme('colors.primary');
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: theme('colors.primaryHover');
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.8);
+            color: theme('colors.dark');
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex items-center justify-center p-0 md:p-4 lg:p-6 text-slate-800">
+
+    <!-- 背景遮罩，用于提升文字可读性 -->
+    <div id="bg-overlay" class="fixed inset-0 bg-gradient-to-br from-indigo-100/30 to-purple-100/30 pointer-events-none z-0"></div>
+
+    <!-- 模态弹窗遮罩 -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 modal-overlay">
+        
+        <!-- 模态弹窗内容 -->
+        <div id="modal-content" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4 modal-content">
+            
+            <!-- 弹窗主体 -->
+            <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                
+                <!-- 弹窗头部 -->
+                <div id="modal-header" class="flex items-center justify-between p-6 border-b border-slate-200">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mr-3">
+                            <i class="fa-solid fa-folder-plus text-primary"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-slate-800">添加分类</h2>
+                    </div>
+                    <button id="close-btn" class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- 弹窗内容区 -->
+                <div id="modal-body" class="p-6">
+                    
+                    <form id="add-category-form" class="space-y-6">
+                        
+                        <!-- 分类名称 -->
+                        <div id="category-name-section" class="space-y-2">
+                            <label for="category-name" class="block text-sm font-medium text-slate-700">
+                                分类名称 <span class="text-accent">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                id="category-name" 
+                                name="category-name"
+                                class="w-full px-4 py-3 rounded-lg border border-slate-300 form-input bg-white/80 backdrop-blur-sm"
+                                placeholder="请输入分类名称"
+                                required
+                                maxlength="20"
+                            >
+                            <p id="name-error" class="text-sm text-accent hidden">分类名称不能为空</p>
+                            <p class="text-xs text-slate-400">最多20个字符</p>
+                        </div>
+
+                        <!-- 选择图标 -->
+                        <div id="category-icon-section" class="space-y-3">
+                            <label class="block text-sm font-medium text-slate-700">选择图标</label>
+                            
+                            <!-- 图标选择器 -->
+                            <div id="icon-selector" class="icon-selector p-3 bg-slate-50 rounded-lg border border-slate-200">
+                                <!-- 图标选项将通过JavaScript动态生成 -->
+                            </div>
+                            
+                            <!-- 当前选中的图标预览 -->
+                            <div id="selected-icon-preview" class="flex items-center space-x-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                                <div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
+                                    <i id="preview-icon" class="fa-solid fa-folder text-lg"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-800">当前图标</p>
+                                    <p class="text-xs text-slate-500">点击选择其他图标</p>
+                                </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- 弹窗底部 -->
+                <div id="modal-footer" class="flex items-center justify-end space-x-3 p-6 border-t border-slate-200 bg-slate-50/50">
+                    <button 
+                        type="button" 
+                        id="cancel-btn" 
+                        class="px-6 py-2.5 rounded-lg btn-secondary font-medium"
+                    >
+                        取消
+                    </button>
+                    <button 
+                        type="submit" 
+                        id="save-btn" 
+                        form="add-category-form"
+                        class="px-6 py-2.5 rounded-lg btn-primary font-medium shadow-lg shadow-indigo-500/20"
+                    >
+                        <i class="fa-solid fa-check mr-2"></i>
+                        保存分类
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // 预设图标列表
+            const iconList = [
+                'fa-folder', 'fa-briefcase', 'fa-graduation-cap', 'fa-pen-nib', 'fa-gamepad',
+                'fa-heart', 'fa-star', 'fa-book', 'fa-music', 'fa-video',
+                'fa-image', 'fa-code', 'fa-globe', 'fa-shopping-cart', 'fa-home',
+                'fa-users', 'fa-cog', 'fa-chart-bar', 'fa-calendar', 'fa-envelope',
+                'fa-file-alt', 'fa-search', 'fa-download', 'fa-upload', 'fa-share',
+                'fa-link', 'fa-bookmark', 'fa-tag', 'fa-folder-open', 'fa-archive'
+            ];
+
+            let selectedIcon = 'fa-folder'; // 默认选中的图标
+
+            // 生成图标选择器
+            function generateIconSelector() {
+                const iconSelector = document.querySelector('#icon-selector');
+                iconSelector.innerHTML = '';
+
+                iconList.forEach(iconClass => {
+                    const iconOption = document.createElement('div');
+                    iconOption.className = `icon-option ${selectedIcon === iconClass ? 'selected' : ''}`;
+                    iconOption.innerHTML = `<i class="fa-solid ${iconClass} text-lg"></i>`;
+                    iconOption.dataset.icon = iconClass;
+                    
+                    iconOption.addEventListener('click', function() {
+                        selectIcon(iconClass);
+                    });
+                    
+                    iconSelector.appendChild(iconOption);
+                });
+            }
+
+            // 选择图标
+            function selectIcon(iconClass) {
+                selectedIcon = iconClass;
+                
+                // 更新图标选择器状态
+                document.querySelectorAll('.icon-option').forEach(option => {
+                    option.classList.remove('selected');
+                    if (option.dataset.icon === iconClass) {
+                        option.classList.add('selected');
+                    }
+                });
+                
+                // 更新预览
+                document.querySelector('#preview-icon').className = `fa-solid ${iconClass} text-lg`;
+            }
+
+            // 表单验证
+            function validateForm() {
+                const categoryName = document.querySelector('#category-name').value.trim();
+                const nameError = document.querySelector('#name-error');
+                
+                if (!categoryName) {
+                    nameError.classList.remove('hidden');
+                    document.querySelector('#category-name').focus();
+                    return false;
+                }
+                
+                nameError.classList.add('hidden');
+                return true;
+            }
+
+            // 保存分类
+            function saveCategory() {
+                if (!validateForm()) {
+                    return;
+                }
+                
+                const categoryName = document.querySelector('#category-name').value.trim();
+                
+                // 模拟保存操作
+                console.log('保存分类:', {
+                    name: categoryName,
+                    icon: selectedIcon
+                });
+                
+                // 显示成功提示
+                alert('分类添加成功！');
+                
+                // 关闭弹窗并返回首页
+                closeModal();
+            }
+
+            // 关闭弹窗
+            function closeModal() {
+                // 在实际应用中，这里会关闭弹窗并刷新首页的分类列表
+                window.location.href = 'P-HOME.html';
+            }
+
+            // 事件监听器
+            
+            // 表单提交
+            document.querySelector('#add-category-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveCategory();
+            });
+
+            // 保存按钮点击
+            document.querySelector('#save-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                saveCategory();
+            });
+
+            // 取消按钮点击
+            document.querySelector('#cancel-btn').addEventListener('click', function() {
+                closeModal();
+            });
+
+            // 关闭按钮点击
+            document.querySelector('#close-btn').addEventListener('click', function() {
+                closeModal();
+            });
+
+            // 点击遮罩关闭弹窗
+            document.querySelector('#modal-overlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+
+            // ESC键关闭弹窗
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+
+            // Enter键提交表单
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    saveCategory();
+                }
+            });
+
+            // 初始化
+            generateIconSelector();
+            
+            // 聚焦到分类名称输入框
+            document.querySelector('#category-name').focus();
+        });
+    </script>
+</body>
+</html>

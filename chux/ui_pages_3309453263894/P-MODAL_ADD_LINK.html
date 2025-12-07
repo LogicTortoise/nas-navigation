@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加网站链接 - 酷站导航</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5', // Indigo 600
+                        primaryHover: '#4338ca',
+                        secondary: '#10B981', // Emerald 500
+                        accent: '#F43F5E', // Rose 500
+                        dark: '#1e293b',
+                        light: '#f8fafc',
+                        glassBorder: 'rgba(255, 255, 255, 0.2)',
+                        glassSurface: 'rgba(255, 255, 255, 0.75)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
+                        'glow': '0 0 15px rgba(79, 70, 229, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 自定义样式 - 玻璃拟态与现代感增强 */
+        body {
+            font-family: 'Inter', sans-serif;
+            /* 动态背景图 */
+            background-image: url('https://images.unsplash.com/photo-1477346611705-65d1883cee1e?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-input-focus:focus {
+            outline: none;
+            border-color: theme('colors.primary');
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        .modal-backdrop {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .modal-enter {
+            animation: modalEnter 0.3s ease-out;
+        }
+
+        @keyframes modalEnter {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .favicon-preview {
+            transition: all 0.3s ease;
+        }
+
+        .favicon-loading {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex items-center justify-center p-0 md:p-4 lg:p-6 text-slate-800">
+
+    <!-- 背景遮罩 -->
+    <div id="bg-overlay" class="fixed inset-0 bg-gradient-to-br from-indigo-100/30 to-purple-100/30 pointer-events-none z-0"></div>
+
+    <!-- 模态弹窗背景 -->
+    <div id="modal-backdrop" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center p-4">
+        
+        <!-- 添加链接弹窗 -->
+        <div id="add-link-modal" class="glass-panel rounded-2xl shadow-2xl w-full max-w-md lg:max-w-lg p-6 lg:p-8 modal-enter">
+            
+            <!-- 弹窗头部 -->
+            <div class="flex justify-between items-center mb-6 lg:mb-8">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary to-purple-500 flex items-center justify-center text-white shadow-lg mr-3">
+                        <i class="fa-solid fa-plus text-lg"></i>
+                    </div>
+                    <h3 class="text-xl lg:text-2xl font-bold text-slate-800">添加网站链接</h3>
+                </div>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-white/50">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- 表单内容 -->
+            <form id="add-link-form" class="space-y-6">
+                
+                <!-- 网站URL -->
+                <div class="space-y-2">
+                    <label for="website-url" class="block text-sm font-medium text-slate-700">
+                        网站 URL <span class="text-accent">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-link text-slate-400"></i>
+                        </div>
+                        <input type="url" 
+                               id="website-url" 
+                               name="url"
+                               placeholder="https://example.com" 
+                               class="w-full pl-12 pr-4 py-3 bg-white/80 border border-slate-300 rounded-xl form-input-focus transition-all text-slate-800 placeholder-slate-400"
+                               required>
+                    </div>
+                    <p id="url-hint" class="text-xs text-slate-500">
+                        输入网址后将自动获取网站图标
+                    </p>
+                </div>
+
+                <!-- 网站名称 -->
+                <div class="space-y-2">
+                    <label for="website-name" class="block text-sm font-medium text-slate-700">
+                        网站名称 <span class="text-accent">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-tag text-slate-400"></i>
+                        </div>
+                        <input type="text" 
+                               id="website-name" 
+                               name="name"
+                               placeholder="例如：Google、GitHub" 
+                               class="w-full pl-12 pr-4 py-3 bg-white/80 border border-slate-300 rounded-xl form-input-focus transition-all text-slate-800 placeholder-slate-400"
+                               required>
+                    </div>
+                </div>
+
+                <!-- 网站图标预览 -->
+                <div id="favicon-section" class="space-y-2 hidden">
+                    <label class="block text-sm font-medium text-slate-700">网站图标</label>
+                    <div class="flex items-center space-x-4">
+                        <div id="favicon-preview" class="w-12 h-12 rounded-lg bg-white shadow-md flex items-center justify-center favicon-preview">
+                            <i class="fa-solid fa-globe text-slate-400 text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p id="favicon-status" class="text-sm text-slate-600">已自动获取网站图标</p>
+                            <button type="button" 
+                                    id="refresh-favicon-btn" 
+                                    class="text-xs text-primary hover:text-primaryHover transition-colors mt-1">
+                                <i class="fa-solid fa-refresh mr-1"></i>重新获取
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 所属分类 -->
+                <div class="space-y-2">
+                    <label for="website-category" class="block text-sm font-medium text-slate-700">
+                        所属分类 <span class="text-accent">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-folder text-slate-400"></i>
+                        </div>
+                        <select id="website-category" 
+                                name="category"
+                                class="w-full pl-12 pr-4 py-3 bg-white/80 border border-slate-300 rounded-xl form-input-focus transition-all text-slate-800 appearance-none">
+                            <option value="">请选择分类</option>
+                            <option value="work">工作效率</option>
+                            <option value="study">学习充电</option>
+                            <option value="design">设计灵感</option>
+                            <option value="entertainment">娱乐摸鱼</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-chevron-down text-slate-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 自定义图标（可选） -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-slate-700">自定义图标 <span class="text-slate-400 text-xs">(可选)</span></label>
+                    <div class="grid grid-cols-6 gap-3">
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg bg-white border-2 border-slate-200 hover:border-primary hover:shadow-md transition-all flex items-center justify-center" data-icon="fas fa-globe">
+                            <i class="fa-solid fa-globe text-slate-600"></i>
+                        </button>
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg bg-white border-2 border-slate-200 hover:border-primary hover:shadow-md transition-all flex items-center justify-center" data-icon="fas fa-star">
+                            <i class="fa-solid fa-star text-slate-600"></i>
+                        </button>
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg bg-white border-2 border-slate-200 hover:border-primary hover:shadow-md transition-all flex items-center justify-center" data-icon="fas fa-heart">
+                            <i class="fa-solid fa-heart text-slate-600"></i>
+                        </button>
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg bg-white border-2 border-slate-200 hover:border-primary hover:shadow-md transition-all flex items-center justify-center" data-icon="fas fa-lightbulb">
+                            <i class="fa-solid fa-lightbulb text-slate-600"></i>
+                        </button>
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg bg-white border-2 border-slate-200 hover:border-primary hover:shadow-md transition-all flex items-center justify-center" data-icon="fas fa-rocket">
+                            <i class="fa-solid fa-rocket text-slate-600"></i>
+                        </button>
+                        <button type="button" class="icon-option w-12 h-12 rounded-lg bg-white border-2 border-dashed border-slate-300 hover:border-primary hover:shadow-md transition-all flex items-center justify-center" data-icon="custom">
+                            <i class="fa-solid fa-upload text-slate-400"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500">选择图标或上传自定义图标</p>
+                </div>
+
+                <!-- 表单底部操作按钮 -->
+                <div class="pt-4 flex space-x-3 lg:space-x-4">
+                    <button type="button" 
+                            id="cancel-btn" 
+                            class="flex-1 px-4 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium transition-all">
+                        <i class="fa-solid fa-times mr-2"></i>取消
+                    </button>
+                    <button type="submit" 
+                            id="save-btn" 
+                            class="flex-1 px-4 py-3 rounded-xl bg-primary text-white hover:bg-primaryHover font-medium shadow-lg shadow-indigo-500/30 transition-all">
+                        <i class="fa-solid fa-save mr-2"></i>保存链接
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取DOM元素
+            const modalBackdrop = document.querySelector('#modal-backdrop');
+            const addLinkModal = document.querySelector('#add-link-modal');
+            const closeModalBtn = document.querySelector('#close-modal-btn');
+            const cancelBtn = document.querySelector('#cancel-btn');
+            const saveBtn = document.querySelector('#save-btn');
+            const addLinkForm = document.querySelector('#add-link-form');
+            const websiteUrlInput = document.querySelector('#website-url');
+            const websiteNameInput = document.querySelector('#website-name');
+            const websiteCategorySelect = document.querySelector('#website-category');
+            const faviconSection = document.querySelector('#favicon-section');
+            const faviconPreview = document.querySelector('#favicon-preview');
+            const faviconStatus = document.querySelector('#favicon-status');
+            const refreshFaviconBtn = document.querySelector('#refresh-favicon-btn');
+            const iconOptions = document.querySelectorAll('.icon-option');
+
+            let selectedIcon = null;
+            let currentFavicon = null;
+
+            // 关闭弹窗函数
+            function closeModal() {
+                // 在实际应用中，这里会关闭弹窗并返回首页
+                window.location.href = 'P-HOME.html';
+            }
+
+            // 显示加载状态
+            function showLoading(element, text = '加载中...') {
+                element.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-slate-400"></i>`;
+                element.classList.add('favicon-loading');
+            }
+
+            // 显示图标
+            function showFavicon(url) {
+                const img = document.createElement('img');
+                img.src = url;
+                img.alt = '网站图标';
+                img.className = 'w-8 h-8 object-contain';
+                
+                img.onload = function() {
+                    faviconPreview.innerHTML = '';
+                    faviconPreview.appendChild(img);
+                    faviconPreview.classList.remove('favicon-loading');
+                    faviconStatus.textContent = '已自动获取网站图标';
+                    currentFavicon = url;
+                };
+                
+                img.onerror = function() {
+                    faviconPreview.innerHTML = '<i class="fa-solid fa-globe text-slate-400 text-xl"></i>';
+                    faviconPreview.classList.remove('favicon-loading');
+                    faviconStatus.textContent = '无法获取网站图标，使用默认图标';
+                    currentFavicon = null;
+                };
+            }
+
+            // 尝试获取网站图标
+            function fetchFavicon(url) {
+                try {
+                    const parsedUrl = new URL(url);
+                    const faviconUrl = `${parsedUrl.protocol}//${parsedUrl.hostname}/favicon.ico`;
+                    
+                    faviconSection.classList.remove('hidden');
+                    showLoading(faviconPreview);
+                    faviconStatus.textContent = '正在获取网站图标...';
+                    
+                    // 延迟执行以显示加载状态
+                    setTimeout(() => {
+                        showFavicon(faviconUrl);
+                    }, 500);
+                } catch (e) {
+                    console.log('URL解析失败:', e);
+                }
+            }
+
+            // 表单验证
+            function validateForm() {
+                const url = websiteUrlInput.value.trim();
+                const name = websiteNameInput.value.trim();
+                const category = websiteCategorySelect.value;
+                
+                if (!url) {
+                    alert('请输入网站URL');
+                    websiteUrlInput.focus();
+                    return false;
+                }
+                
+                if (!name) {
+                    alert('请输入网站名称');
+                    websiteNameInput.focus();
+                    return false;
+                }
+                
+                if (!category) {
+                    alert('请选择分类');
+                    websiteCategorySelect.focus();
+                    return false;
+                }
+                
+                return true;
+            }
+
+            // 保存链接
+            function saveLink() {
+                if (!validateForm()) {
+                    return;
+                }
+                
+                const formData = {
+                    url: websiteUrlInput.value.trim(),
+                    name: websiteNameInput.value.trim(),
+                    category: websiteCategorySelect.value,
+                    icon: selectedIcon || currentFavicon
+                };
+                
+                console.log('保存链接数据:', formData);
+                
+                // 模拟保存成功
+                alert('网站链接添加成功！');
+                closeModal();
+            }
+
+            // 事件监听器
+            
+            // 关闭弹窗事件
+            closeModalBtn.addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            
+            // 点击背景关闭弹窗
+            modalBackdrop.addEventListener('click', function(e) {
+                if (e.target === modalBackdrop) {
+                    closeModal();
+                }
+            });
+            
+            // ESC键关闭弹窗
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+            
+            // Enter键提交表单
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    saveLink();
+                }
+            });
+            
+            // URL输入事件
+            websiteUrlInput.addEventListener('blur', function() {
+                const url = this.value.trim();
+                if (url) {
+                    fetchFavicon(url);
+                }
+            });
+            
+            // 刷新图标
+            refreshFaviconBtn.addEventListener('click', function() {
+                const url = websiteUrlInput.value.trim();
+                if (url) {
+                    fetchFavicon(url);
+                }
+            });
+            
+            // 图标选择
+            iconOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 移除所有选中状态
+                    iconOptions.forEach(opt => {
+                        opt.classList.remove('border-primary', 'bg-primary/10');
+                        opt.classList.add('border-slate-200');
+                    });
+                    
+                    // 设置当前选中
+                    this.classList.remove('border-slate-200');
+                    this.classList.add('border-primary', 'bg-primary/10');
+                    
+                    selectedIcon = this.dataset.icon;
+                    
+                    // 如果选择自定义上传，这里可以打开文件选择器
+                    if (selectedIcon === 'custom') {
+                        console.log('需要调用第三方接口实现文件上传功能');
+                        // 注释：此功能需要文件上传API，在原型阶段仅做UI展示
+                    }
+                });
+            });
+            
+            // 表单提交
+            addLinkForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveLink();
+            });
+            
+            // 保存按钮点击
+            saveBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                saveLink();
+            });
+            
+            // 页面加载时聚焦到URL输入框
+            websiteUrlInput.focus();
+            
+            // 从URL参数获取当前分类
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentCategory = urlParams.get('category');
+            if (currentCategory) {
+                websiteCategorySelect.value = currentCategory;
+            }
+        });
+    </script>
+</body>
+</html>
