@@ -140,7 +140,7 @@
               :card-type="'horizontal'"
               @edit="editLink"
               @delete="handleDeleteLink"
-              @execute="handleExecuteScript"
+              @restart="handleRestartLink"
             />
           </div>
         </section>
@@ -169,7 +169,7 @@
                 :card-type="'horizontal'"
                 @edit="editLink"
                 @delete="handleDeleteLink"
-                @execute="handleExecuteScript"
+                @restart="handleRestartLink"
               />
               <AddLinkButton :horizontal="true" @click="addLinkToCategory(cat.id)" />
             </div>
@@ -190,7 +190,7 @@
               :card-type="'horizontal'"
               @edit="editLink"
               @delete="handleDeleteLink"
-              @execute="handleExecuteScript"
+              @restart="handleRestartLink"
             />
             <AddLinkButton :horizontal="true" @click="addLinkToCategory(currentCategory)" />
           </div>
@@ -433,11 +433,11 @@ async function handleDeleteCategory(category) {
   }
 }
 
-// 脚本执行
-async function handleExecuteScript(link) {
-  if (!link.script_id) return
+// 重启单个服务
+async function handleRestartLink(link) {
+  if (!link.restart_script) return
   try {
-    const result = await store.executeScript(link.script_id)
+    const result = await store.restartLink(link.id)
     scriptResult.value = result
   } catch (error) {
     scriptResult.value = {

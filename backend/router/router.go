@@ -63,6 +63,7 @@ func Setup(cfg *config.Config) *gin.Engine {
 		api.GET("/system/info", systemHandler.GetInfo)
 		api.POST("/system/restart", systemHandler.Restart)
 		api.POST("/system/restart-all", systemHandler.RestartAllServices)
+		api.POST("/system/restart-link/:id", systemHandler.RestartLink)
 		api.POST("/system/quick/:action", systemHandler.ExecuteQuickAction)
 	}
 

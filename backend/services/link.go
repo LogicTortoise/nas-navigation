@@ -13,14 +13,13 @@ func NewLinkService() *LinkService {
 
 func (s *LinkService) GetAll() ([]models.Link, error) {
 	var links []models.Link
-	err := database.DB.Preload("Category").Preload("Script").Order("sort_order ASC").Find(&links).Error
+	err := database.DB.Preload("Category").Order("sort_order ASC").Find(&links).Error
 	return links, err
 }
 
 func (s *LinkService) GetByCategory(categoryID uint) ([]models.Link, error) {
 	var links []models.Link
 	err := database.DB.Where("category_id = ?", categoryID).
-		Preload("Script").
 		Order("sort_order ASC").
 		Find(&links).Error
 	return links, err
@@ -28,7 +27,7 @@ func (s *LinkService) GetByCategory(categoryID uint) ([]models.Link, error) {
 
 func (s *LinkService) GetByID(id uint) (*models.Link, error) {
 	var link models.Link
-	err := database.DB.Preload("Category").Preload("Script").First(&link, id).Error
+	err := database.DB.Preload("Category").First(&link, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +40,6 @@ func (s *LinkService) Search(query string) ([]models.Link, error) {
 	err := database.DB.Where("name LIKE ? OR description LIKE ? OR url LIKE ?",
 		searchQuery, searchQuery, searchQuery).
 		Preload("Category").
-		Preload("Script").
 		Order("sort_order ASC").
 		Find(&links).Error
 	return links, err
@@ -49,13 +47,13 @@ func (s *LinkService) Search(query string) ([]models.Link, error) {
 
 func (s *LinkService) Create(req *models.LinkRequest) (*models.Link, error) {
 	link := &models.Link{
-		CategoryID:  req.CategoryID,
-		Name:        req.Name,
-		URL:         req.URL,
-		Icon:        req.Icon,
-		Description: req.Description,
-		SortOrder:   req.SortOrder,
-		ScriptID:    req.ScriptID,
+		CategoryID:    req.CategoryID,
+		Name:          req.Name,
+		URL:           req.URL,
+		Icon:          req.Icon,
+		Description:   req.Description,
+		SortOrder:     req.SortOrder,
+		RestartScript: req.RestartScript,
 	}
 	err := database.DB.Create(link).Error
 	if err != nil {
@@ -77,7 +75,7 @@ func (s *LinkService) Update(id uint, req *models.LinkRequest) (*models.Link, er
 	link.Icon = req.Icon
 	link.Description = req.Description
 	link.SortOrder = req.SortOrder
-	link.ScriptID = req.ScriptID
+	link.RestartScript = req.RestartScript
 
 	err := database.DB.Save(&link).Error
 	if err != nil {

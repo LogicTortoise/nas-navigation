@@ -64,6 +64,17 @@ func (h *SystemHandler) RestartAllServices(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
+// RestartLink restarts a specific link by executing its restart_script
+func (h *SystemHandler) RestartLink(c *gin.Context) {
+	id := c.Param("id")
+	result, err := h.service.RestartLink(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
 // ExecuteQuickAction executes a predefined quick action
 func (h *SystemHandler) ExecuteQuickAction(c *gin.Context) {
 	action := c.Param("action")

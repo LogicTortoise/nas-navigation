@@ -162,6 +162,10 @@ export const useAppStore = defineStore('app', () => {
     return await systemApi.restartAll()
   }
 
+  async function restartLink(id) {
+    return await systemApi.restartLink(id)
+  }
+
   async function executeQuickAction(action) {
     return await systemApi.quickAction(action)
   }
@@ -203,6 +207,7 @@ export const useAppStore = defineStore('app', () => {
     getSystemInfo,
     restartSystem,
     restartAllServices,
+    restartLink,
     executeQuickAction
   }
 })

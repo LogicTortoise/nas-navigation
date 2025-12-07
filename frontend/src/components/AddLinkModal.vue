@@ -127,19 +127,25 @@
           </div>
         </div>
 
-        <!-- 关联脚本（可选） -->
+        <!-- 重启脚本（可选） -->
         <div class="space-y-2">
           <label class="block text-sm font-medium text-slate-700">
-            关联脚本 <span class="text-slate-400 text-xs">(可选)</span>
+            重启脚本 <span class="text-slate-400 text-xs">(可选)</span>
           </label>
-          <CustomSelect
-            v-model="form.script_id"
-            :options="scriptOptions"
-            placeholder="选择脚本"
-            icon="fa-solid fa-code"
-            :allow-empty="true"
-            empty-label="无"
-          />
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i class="fa-solid fa-terminal text-slate-400"></i>
+            </div>
+            <input
+              type="text"
+              v-model="form.restart_script"
+              placeholder="/path/to/restart.sh 或 systemctl restart xxx"
+              class="w-full pl-12 pr-4 py-3 bg-white/80 border border-slate-300 rounded-xl form-input-focus transition-all text-slate-800 placeholder-slate-400"
+            >
+          </div>
+          <p class="text-xs text-slate-500">
+            输入脚本路径或命令，用于一键重启该服务
+          </p>
         </div>
 
         <!-- 表单底部操作按钮 -->
@@ -186,16 +192,6 @@ const categoryOptions = computed(() => {
   }))
 })
 
-// 脚本选项
-const scriptOptions = computed(() => {
-  return store.scripts.map(script => ({
-    value: script.id,
-    label: script.name,
-    icon: 'fa-solid fa-terminal',
-    color: '#10b981'
-  }))
-})
-
 function getCategoryIcon(icon) {
   if (icon && icon.startsWith('fa-')) {
     return 'fa-solid ' + icon
@@ -227,7 +223,7 @@ const form = reactive({
   category_id: null,
   icon: '',
   description: '',
-  script_id: null,
+  restart_script: '',
   sort_order: 0
 })
 
@@ -261,7 +257,7 @@ onMounted(() => {
       category_id: props.link.category_id,
       icon: props.link.icon || '',
       description: props.link.description || '',
-      script_id: props.link.script_id,
+      restart_script: props.link.restart_script || '',
       sort_order: props.link.sort_order || 0
     })
     if (props.link.url) {

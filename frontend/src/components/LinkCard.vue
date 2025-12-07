@@ -9,12 +9,12 @@
     <!-- 操作按钮 -->
     <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
       <button
-        v-if="link.script_id"
-        @click.prevent="$emit('execute', link)"
+        v-if="link.restart_script"
+        @click.prevent="$emit('restart', link)"
         class="text-slate-400 hover:text-green-600 p-1.5 rounded-lg hover:bg-green-50 transition-colors"
-        title="执行脚本"
+        title="重启服务"
       >
-        <i class="fa-solid fa-play text-xs"></i>
+        <i class="fa-solid fa-rotate text-xs"></i>
       </button>
       <button
         @click.prevent="$emit('edit', link)"
@@ -80,12 +80,12 @@
     <!-- 操作按钮 -->
     <div class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
       <button
-        v-if="link.script_id"
-        @click.prevent="$emit('execute', link)"
+        v-if="link.restart_script"
+        @click.prevent="$emit('restart', link)"
         class="text-slate-400 hover:text-green-600 p-1"
-        title="执行脚本"
+        title="重启服务"
       >
-        <i class="fa-solid fa-play text-xs"></i>
+        <i class="fa-solid fa-rotate text-xs"></i>
       </button>
       <button
         @click.prevent="$emit('edit', link)"
@@ -119,7 +119,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['edit', 'delete', 'execute'])
+defineEmits(['edit', 'delete', 'restart'])
 
 const iconError = ref(false)
 

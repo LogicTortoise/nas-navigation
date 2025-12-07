@@ -116,11 +116,32 @@ func (s *SystemService) Restart(target string) (*models.SystemActionResult, erro
 	return result, nil
 }
 
-// RestartAllServices restarts all services that have associated scripts
+// RestartLink restarts a specific link by its ID
+func (s *SystemService) RestartLink(id string) (*models.SystemActionResult, error) {
+	var link models.Link
+	if err := database.DB.First(&link, id).Error; err != nil {
+		return nil, fmt.Errorf("link not found: %w", err)
+	}
+
+	if link.RestartScript == "" {
+		return &models.SystemActionResult{
+			Action:  "restart",
+			Success: false,
+			Error:   "该链接未配置重启脚本",
+		}, nil
+	}
+
+	result := s.executeScript(link.RestartScript, 30)
+	result.Action = "restart"
+	result.Message = fmt.Sprintf("服务 '%s' 重启完成", link.Name)
+	return result, nil
+}
+
+// RestartAllServices restarts all services that have restart scripts configured
 func (s *SystemService) RestartAllServices() (*models.BatchRestartResult, error) {
-	// Get all links with scripts
+	// Get all links with restart_script configured
 	var links []models.Link
-	err := database.DB.Preload("Script").Where("script_id IS NOT NULL").Find(&links).Error
+	err := database.DB.Where("restart_script IS NOT NULL AND restart_script != ''").Find(&links).Error
 	if err != nil {
 		return nil, err
 	}
@@ -143,9 +164,6 @@ func (s *SystemService) RestartAllServices() (*models.BatchRestartResult, error)
 	semaphore := make(chan struct{}, 3) // Limit concurrent executions to 3
 
 	for _, link := range links {
-		if link.Script == nil {
-			continue
-		}
 		wg.Add(1)
 		go func(l models.Link) {
 			defer wg.Done()
@@ -155,11 +173,11 @@ func (s *SystemService) RestartAllServices() (*models.BatchRestartResult, error)
 			serviceResult := models.ServiceRestartResult{
 				ServiceName: l.Name,
 				ServiceID:   l.ID,
-				ScriptName:  l.Script.Name,
+				ScriptName:  l.RestartScript,
 			}
 
 			startTime := time.Now()
-			execResult := s.executeScript(l.Script.Command, l.Script.Timeout)
+			execResult := s.executeScript(l.RestartScript, 30)
 			serviceResult.Duration = time.Since(startTime).Milliseconds()
 			serviceResult.Success = execResult.Success
 			serviceResult.Output = execResult.Message

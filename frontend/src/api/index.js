@@ -54,6 +54,7 @@ export const systemApi = {
   getInfo: () => api.get('/system/info'),
   restart: (target = '', confirm = true) => api.post('/system/restart', { target, confirm }),
   restartAll: () => api.post('/system/restart-all'),
+  restartLink: (id) => api.post(`/system/restart-link/${id}`),
   quickAction: (action) => api.post(`/system/quick/${action}`)
 }
 
