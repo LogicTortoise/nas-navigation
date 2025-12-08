@@ -28,3 +28,9 @@ Thumbs.db
 
 # Playwright
 .playwright-mcp/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+/tmp/
